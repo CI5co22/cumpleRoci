@@ -20,19 +20,60 @@ interface FloatingText {
 
 interface StarMemoryCard {
   id: string;
-  image: string;
+  imageName: string;
   text: string;
   title: string;
 }
 
+type ManagedImageProps = Omit<React.ComponentProps<'img'>, 'src'> & {
+  name: string;
+};
+
+const CUSTOM_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'] as const;
+const CUSTOM_IMAGE_DIRECTORY = '/images/custom';
+const FINAL_CELEBRATION_IMAGE = 'img7';
+const FLOWER_PETAL_COUNT = 6;
+const FLOWER_CORE_COUNT = 320;
+const FLOWER_INNER_RING_COUNT = 480;
+const FLOWER_EDGE_PARTICLE_COUNT = 960;
+
+const getCustomImagePath = (name: string, extension: string) =>
+  `${CUSTOM_IMAGE_DIRECTORY}/${name}.${extension}`;
+
+function ManagedImage({ name, onError, ...props }: ManagedImageProps) {
+  const [candidateIndex, setCandidateIndex] = useState(0);
+
+  useEffect(() => {
+    setCandidateIndex(0);
+  }, [name]);
+
+  const currentExtension =
+    CUSTOM_IMAGE_EXTENSIONS[Math.min(candidateIndex, CUSTOM_IMAGE_EXTENSIONS.length - 1)];
+
+  return (
+    <img
+      {...props}
+      src={getCustomImagePath(name, currentExtension)}
+      onError={(event) => {
+        if (candidateIndex < CUSTOM_IMAGE_EXTENSIONS.length - 1) {
+          setCandidateIndex((current) => current + 1);
+          return;
+        }
+
+        onError?.(event);
+      }}
+    />
+  );
+}
+
 // Datos de las tarjetas de recuerdos de ensueño para Rocío
 const STAR_MEMORIES = [
-  { title: "El Destello de Rocío", text: "En un mundo de infinitas opciones, nuestros caminos se alinearon perfectamente bajo la luna silenciosa, Rocío.", image: "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&q=80&w=600" },
-  { title: "Ecos de Luz", text: "Incluso en la noche más profunda, una suave luz guía tus pasos, Rocío, susurrando secretos del mañana.", image: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&q=80&w=600" },
-  { title: "Mar Bioluminiscente", text: "El océano contiene reflejos del cosmos, brillando con tus hermosos sueños, Rocío.", image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=600" },
-  { title: "Jardín del Atardecer", text: "Un campo de flores de luz florece bajo tu toque, entonando una melodía de eterna primavera para Rocío.", image: "https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?auto=format&fit=crop&q=80&w=600" },
-  { title: "Cuna de Sueños", text: "Descansa tu mente cansada sobre la luna plateada, donde nace la esperanza del mañana para Rocío.", image: "https://images.unsplash.com/photo-1532960401447-7dd05bef20b0?auto=crop&fit=crop&q=80&w=600" },
-  { title: "Valle de los Vientos", text: "Deja que tus preocupaciones se disuelvan en el viento, Rocío. Eres una viajera de la luz.", image: "https://images.unsplash.com/photo-1500627869374-13cd993b1115?auto=format&fit=crop&q=80&w=600" },
+  { title: "El Destello de Rocío", text: "En un mundo de infinitas opciones, nuestros caminos se alinearon perfectamente bajo la luna silenciosa, Rocío.", imageName: 'img1' },
+  { title: "Ecos de Luz", text: "Incluso en la noche más profunda, una suave luz guía tus pasos, Rocío, susurrando secretos del mañana.", imageName: 'img2' },
+  { title: "Mar Bioluminiscente", text: "El océano contiene reflejos del cosmos, brillando con tus hermosos sueños, Rocío.", imageName: 'img3' },
+  { title: "Jardín del Atardecer", text: "Un campo de flores de luz florece bajo tu toque, entonando una melodía de eterna primavera para Rocío.", imageName: 'img4' },
+  { title: "Cuna de Sueños", text: "Descansa tu mente cansada sobre la luna plateada, donde nace la esperanza del mañana para Rocío.", imageName: 'img5' },
+  { title: "Valle de los Vientos", text: "Deja que tus preocupaciones se disuelvan en el viento, Rocío. Eres una viajera de la luz.", imageName: 'img6' },
 ];
 
 // Coordenadas y frases en español de las estrellas interactivas, agrupadas para móviles con progresión de profundidad
@@ -57,7 +98,7 @@ const CONSTELLATION_CONNECTIONS = [
   [4, 8], [8, 9], [9, 10], [10, 7] // Lower arc
 ];
 
-const FLOWER_COUNT = 1500; // Simplified particle counts for very clean, highly visible petals
+const FLOWER_COUNT = 2300;
 const MAX_SPARKS = 1500;
 const REQUIRED_STARS_TO_AWAKEN = 5;
 
@@ -72,7 +113,6 @@ export default function CelestialUniverse() {
   const [isCinematicActive, setIsCinematicActive] = useState(false);
   const [typedSentence, setTypedSentence] = useState('');
   const [isSentenceVisible, setIsSentenceVisible] = useState(false);
-  const [hasStartedExploring, setHasStartedExploring] = useState(false);
 
   // Core gameplay states
   const [tappedStars, setTappedStars] = useState<Record<string, boolean>>({});
@@ -130,7 +170,6 @@ export default function CelestialUniverse() {
     centralGlowMesh?: THREE.Mesh;
     coreStarMesh?: THREE.Mesh;
     coreGlowMesh?: THREE.Mesh;
-    solidFlowerPetals?: THREE.Group;
   } | null>(null);
 
   const tappedCount = Object.keys(tappedStars).length;
@@ -197,8 +236,9 @@ export default function CelestialUniverse() {
       return new THREE.CanvasTexture(canvas);
     };
 
-    const starTexture = createRadialGlowTexture('#ffffff', 32);
-    const blueGlowTexture = createRadialGlowTexture('#00e5ff', 64); // Highly luminous electric cyan/blue
+    const starTexture = createRadialGlowTexture('#fff7de', 32);
+    const warmStarGlowTexture = createRadialGlowTexture('#ffd46b', 64);
+    const coreGlowTexture = createRadialGlowTexture('#ffefb3', 64);
 
     // 3. Ambient Dust & Tiny Twinkling Stars (Distant Layer)
     const starCount = 2000;
@@ -284,7 +324,7 @@ export default function CelestialUniverse() {
     moonMesh.position.set(15, 12, -15);
     scene.add(moonMesh);
 
-    // 6. Interactive Star Nodes (Significantly Brighter & Larger Cyan Glows)
+    // 6. Interactive Star Nodes
     const interactiveStarMeshes: THREE.Mesh[] = [];
     const starHomePositions: THREE.Vector3[] = [];
     const starCurrentOffsets: THREE.Vector3[] = [];
@@ -293,7 +333,7 @@ export default function CelestialUniverse() {
 
     INTERACTIVE_STARS_DATA.forEach((data, index) => {
       const nodeMat = new THREE.MeshBasicMaterial({
-        color: 0xfffcf0,
+        color: 0xfff4c4,
         transparent: true,
         opacity: 0.95
       });
@@ -303,10 +343,10 @@ export default function CelestialUniverse() {
       
       const glowGeo = new THREE.PlaneGeometry(5.5, 5.5); // Doubled size for massive radiant shine!
       const glowMat = new THREE.MeshBasicMaterial({
-        map: blueGlowTexture,
+        map: warmStarGlowTexture,
         transparent: true,
         blending: THREE.AdditiveBlending,
-        opacity: 0.95, // Higher opacity for maximum brightness
+        opacity: 0.92,
         depthWrite: false
       });
       const glowMesh = new THREE.Mesh(glowGeo, glowMat);
@@ -357,23 +397,21 @@ export default function CelestialUniverse() {
     const constellationLines = new THREE.LineSegments(constellationGeo, constellationMat);
     scene.add(constellationLines);
 
-    // 8. SIMPLIFIED: 3D Sacred Geometry Stardust Flower with 8 Beautiful Highly-Visible Pointed Lotus Petals
+    // 8. Stardust flower formed only by star particles
     const flowerGeometry = new THREE.BufferGeometry();
     const flowerPositions = new Float32Array(FLOWER_COUNT * 3);
-    const flowerColors = new Float32Array(FLOWER_COUNT * 3); // Per-vertex color arrays for blue theme gradients
+    const flowerColors = new Float32Array(FLOWER_COUNT * 3);
     const stardustFlowerPositions: THREE.Vector3[] = [];
     const stardustFlowerTargets: THREE.Vector3[] = [];
 
-    // Mathematically design a highly distinct 8-petal Lotus flower
     for (let i = 0; i < FLOWER_COUNT; i++) {
-      // Starting coordinates (dispersed cosmic fog)
       const thetaVal = Math.random() * Math.PI * 2;
       const phiVal = Math.acos((Math.random() * 2) - 1);
       const dist = 30 + Math.random() * 45;
       const startX = dist * Math.sin(phiVal) * Math.cos(thetaVal);
       const startY = dist * Math.sin(phiVal) * Math.sin(thetaVal);
       const startZ = -10 + (Math.random() - 0.5) * 20;
-      
+
       const startPos = new THREE.Vector3(startX, startY, startZ);
       stardustFlowerPositions.push(startPos);
 
@@ -385,76 +423,79 @@ export default function CelestialUniverse() {
       let gCol = 1.0;
       let bCol = 1.0;
 
-      if (i < 480) {
-        // Redesigned central crown matching the image:
-        // - A very dense dark navy/teal core at the very center (r < 0.6)
-        // - Surrounded by beautiful golden/amber stamen tips on white/pale filaments (0.6 <= r < 1.85)
-        const r = 0.1 + Math.pow(Math.random(), 1.15) * 1.75;
-        const ang = Math.random() * Math.PI * 2;
-        targetX = r * Math.cos(ang);
-        targetY = r * Math.sin(ang);
-        targetZ = (Math.random() - 0.5) * 0.35;
+      if (i < FLOWER_CORE_COUNT) {
+        const radius = 0.15 + Math.pow(Math.random(), 0.72) * 1.85;
+        const angle = Math.random() * Math.PI * 2;
+        targetX = radius * Math.cos(angle);
+        targetY = radius * Math.sin(angle);
+        targetZ = (Math.random() - 0.5) * 0.35 + radius * 0.06;
 
-        if (r < 0.6) {
-          // Dark natural greenish/black core in the center of the stamens
-          rCol = 0.01;
-          gCol = 0.06;
-          bCol = 0.1;
+        if (radius < 0.52) {
+          rCol = 0.16;
+          gCol = 0.09;
+          bCol = 0.03;
         } else {
-          // Yellow-gold / amber stamen pollen tips with elegant high contrast
-          const isAmber = Math.random() > 0.4;
-          rCol = isAmber ? 0.95 : 0.98;
-          gCol = isAmber ? 0.75 : 0.90;
-          bCol = isAmber ? 0.20 : 0.60;
+          rCol = 0.96;
+          gCol = THREE.MathUtils.lerp(0.68, 0.9, Math.random());
+          bCol = THREE.MathUtils.lerp(0.18, 0.42, Math.random());
         }
       } else {
-        // Redesigned wide, circular, overlapping 5-petal structure that does not narrow to a thin point near the center!
-        const petalIdx = i % 5;
-        const baseAngle = petalIdx * (Math.PI * 2 / 5);
-        
-        // pct represents progression from base of petal to outer edge [0, 1]
-        const pct = Math.pow(Math.random(), 0.95);
-        const r_base = 0.65;
-        const L = 8.5;
-        const distFromCenter = r_base + pct * L;
-        
-        // Circular, wide-bodied petal width profile: broad base, rich middle, gently rounded tip
-        const baseWidth = 3.0; // Thick base so it connects fully and looks robust
-        const midWidth = 5.2;  // Beautifully broad body for a circular flowery presence
-        const tipWidth = 1.6;  // Nicely rounded tip
-        const widthProfile = baseWidth * (1.0 - pct) + midWidth * Math.sin(pct * Math.PI) + tipWidth * pct;
-        
-        // w represents position across the petal width [-0.5, 0.5]
-        const w = (Math.random() - 0.5);
-        const localX = distFromCenter;
-        const localY = w * widthProfile;
-        
-        // Rotate the local 2D petal coordinate by the petal's base angle
+        const petalParticleIndex = i - FLOWER_CORE_COUNT;
+        const isInnerRing = petalParticleIndex < FLOWER_INNER_RING_COUNT;
+        const isEdgeBand =
+          petalParticleIndex >= FLOWER_INNER_RING_COUNT &&
+          petalParticleIndex < FLOWER_INNER_RING_COUNT + FLOWER_EDGE_PARTICLE_COUNT;
+        const localIndex = isInnerRing
+          ? petalParticleIndex
+          : petalParticleIndex - FLOWER_INNER_RING_COUNT;
+        const edgeBandIndex = petalParticleIndex - FLOWER_INNER_RING_COUNT;
+        const petalIdx = isEdgeBand
+          ? Math.floor(edgeBandIndex / 2) % FLOWER_PETAL_COUNT
+          : localIndex % FLOWER_PETAL_COUNT;
+        const baseAngle =
+          petalIdx * (Math.PI * 2 / FLOWER_PETAL_COUNT) +
+          (isInnerRing ? Math.PI / FLOWER_PETAL_COUNT : 0);
+
+        const pct = isInnerRing
+          ? Math.pow(Math.random(), 0.78)
+          : isEdgeBand
+            ? 0.06 + Math.random() * 0.9
+            : Math.pow(Math.random(), 0.94);
+        const distanceFromCenter =
+          (isInnerRing ? 1.2 : isEdgeBand ? 1.55 : 1.85) +
+          pct * (isInnerRing ? 4.8 : isEdgeBand ? 8.7 : 8.4) -
+          Math.pow(pct, 2) * (isInnerRing ? 0.3 : isEdgeBand ? 0.58 : 0.68);
+        const edgeDirection = isEdgeBand
+          ? edgeBandIndex % 2 === 0 ? -1 : 1
+          : Math.random() > 0.5 ? 1 : -1;
+        const sideOffset = isEdgeBand
+          ? edgeDirection * THREE.MathUtils.lerp(0.94, 1.08, Math.pow(Math.random(), 0.45))
+          : (Math.random() - 0.5) * 2;
+        const widthProfile =
+          (isInnerRing ? 0.65 : isEdgeBand ? 0.92 : 0.9) +
+          Math.sin(pct * Math.PI) * (isInnerRing ? 2.45 : isEdgeBand ? 4.35 : 4.05);
+        const localX = distanceFromCenter;
+        const localY =
+          sideOffset *
+          widthProfile *
+          THREE.MathUtils.lerp(1.0, isEdgeBand ? 0.58 : 0.35, pct);
+
         targetX = localX * Math.cos(baseAngle) - localY * Math.sin(baseAngle);
         targetY = localX * Math.sin(baseAngle) + localY * Math.cos(baseAngle);
-        
-        // Curve the petals elegantly upward/forward in 3D to form a cupped chalice-like organic shape
-        targetZ = Math.sin(Math.PI * pct) * 1.6 - pct * 0.9 + (Math.random() - 0.5) * 0.12;
+        targetZ =
+          (isInnerRing ? 0.32 : isEdgeBand ? -0.08 : -0.18) +
+          Math.sin(Math.PI * pct) * (isInnerRing ? 1.16 : isEdgeBand ? 1.88 : 1.75) -
+          pct * (isInnerRing ? 0.12 : isEdgeBand ? 0.4 : 0.48) +
+          (Math.random() - 0.5) * (isEdgeBand ? 0.11 : 0.16);
 
-        // Radiant Sky Blue to Azure Base colors matching the photograph
-        const baseR = THREE.MathUtils.lerp(0.08, 0.22, pct);
-        const baseG = THREE.MathUtils.lerp(0.42, 0.68, pct);
-        const baseB = THREE.MathUtils.lerp(0.88, 1.0, pct);
-
-        // Compute deep navy/royal blue veins radiating from center (using w across the petal width)
-        // High frequency sine wave along the width produces organic radial ridges/veins
-        const veinStrength = Math.max(0, Math.cos(w * Math.PI * 5.0));
-        
-        // Saturated deep indigo/navy blue vein color
-        const veinR = 0.02;
-        const veinG = 0.15;
-        const veinB = 0.48;
-
-        // Blend veins more strongly towards the inner/middle region, exactly like the image
-        const blendFactor = veinStrength * 0.8 * (1.0 - pct * 0.4);
-        rCol = THREE.MathUtils.lerp(baseR, veinR, blendFactor);
-        gCol = THREE.MathUtils.lerp(baseG, veinG, blendFactor);
-        bCol = THREE.MathUtils.lerp(baseB, veinB, blendFactor);
+        const baseR = THREE.MathUtils.lerp(1.0, isInnerRing ? 0.985 : isEdgeBand ? 0.985 : 0.94, pct);
+        const baseG = THREE.MathUtils.lerp(0.94, isInnerRing ? 0.86 : isEdgeBand ? 0.9 : 0.76, pct);
+        const baseB = THREE.MathUtils.lerp(0.6, isInnerRing ? 0.5 : isEdgeBand ? 0.42 : 0.28, pct);
+        const veinStrength = Math.max(0, Math.cos(sideOffset * Math.PI * 3.5));
+        const shadowBlend = veinStrength * (isInnerRing ? 0.18 : isEdgeBand ? 0.12 : 0.28) * (1.0 - pct * 0.25);
+        rCol = THREE.MathUtils.lerp(baseR, isEdgeBand ? 1.0 : 0.88, shadowBlend);
+        gCol = THREE.MathUtils.lerp(baseG, isEdgeBand ? 0.94 : 0.62, shadowBlend);
+        bCol = THREE.MathUtils.lerp(baseB, isEdgeBand ? 0.52 : 0.16, shadowBlend);
       }
 
       stardustFlowerTargets.push(new THREE.Vector3(targetX, targetY, targetZ));
@@ -472,9 +513,9 @@ export default function CelestialUniverse() {
     flowerGeometry.setAttribute('color', new THREE.BufferAttribute(flowerColors, 3));
 
     const flowerMat = new THREE.PointsMaterial({
-      size: 0.58,
+      size: 0.64,
       map: starTexture,
-      vertexColors: true, // Enable vertex coloring for stunning blue/cyan gradients!
+      vertexColors: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       transparent: true,
@@ -483,90 +524,6 @@ export default function CelestialUniverse() {
 
     const stardustFlower = new THREE.Points(flowerGeometry, flowerMat);
     scene.add(stardustFlower);
-
-    // Create custom, mathematically beautiful 3D organic petals with gorgeous gradients
-    const createPetalGeometry = () => {
-      // 3.5 wide, 8.5 tall. Perfect dimensions for a classical, luxurious organic petal.
-      const geom = new THREE.PlaneGeometry(3.5, 8.5, 12, 24);
-      const posAttr = geom.attributes.position;
-      
-      for (let i = 0; i < posAttr.count; i++) {
-        const x = posAttr.getX(i);
-        const y = posAttr.getY(i); // ranges from -4.25 to +4.25
-        
-        // Normalize y to progress [0, 1] from base (-4.25) to tip (+4.25)
-        const pct = (y + 4.25) / 8.5;
-        
-        // Width envelope: start with a narrow organic base,
-        // swell broad in the middle, and gracefully taper to a rounded pointed tip at the top (pct = 1)
-        const widthFactor = Math.sin(pct * Math.PI) * (0.35 + 0.65 * Math.sin(pct * Math.PI * 0.5));
-        const newX = x * widthFactor;
-        posAttr.setX(i, newX);
-        
-        // 3D curved cupping:
-        // Petal bends upward/forward in Z based on length (pct) and cups slightly inwards along the edges (X)
-        const lengthCurve = Math.pow(pct, 1.8) * 2.5; // curved upward
-        const widthCurve = -0.45 * (x * x) * Math.sin(pct * Math.PI); // cupped along the sides
-        posAttr.setZ(i, lengthCurve + widthCurve);
-        
-        // Shift local Y origin so the base of the petal is at exactly Y = 0 (the flower center!)
-        posAttr.setY(i, y + 4.25);
-      }
-      
-      geom.computeVertexNormals();
-      return geom;
-    };
-
-    const createPetalTexture = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 128;
-      canvas.height = 256;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        // Linear gradient from base (bottom) to tip (top)
-        const grad = ctx.createLinearGradient(0, 256, 0, 0);
-        // Deep blue base, transition to cyan glow, with a pure white luminous tip/edge
-        grad.addColorStop(0, 'rgba(8, 18, 54, 0.95)');     // Rich dark cosmic indigo base
-        grad.addColorStop(0.3, 'rgba(12, 54, 150, 0.9)');  // Premium royal blue
-        grad.addColorStop(0.65, 'rgba(0, 180, 240, 0.95)'); // Celestial glowing cyan
-        grad.addColorStop(0.9, 'rgba(160, 240, 255, 0.98)');// Icy cyan glow near tip
-        grad.addColorStop(1, 'rgba(255, 255, 255, 1)');     // Luminous pure white tip
-        
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 128, 256);
-      }
-      const texture = new THREE.CanvasTexture(canvas);
-      return texture;
-    };
-
-    const petalTex = createPetalTexture();
-    const petalMaterial = new THREE.MeshBasicMaterial({
-      map: petalTex,
-      transparent: true,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      opacity: 0.0 // controlled by bloomVal in the render loop
-    });
-
-    const solidFlowerPetals = new THREE.Group();
-    const petalGeom = createPetalGeometry();
-    const numPetals = 5;
-
-    for (let p = 0; p < numPetals; p++) {
-      const petalMesh = new THREE.Mesh(petalGeom, petalMaterial);
-      
-      // Rotate each petal around the Z axis to form a perfect 5-star ring
-      const angle = p * (Math.PI * 2 / numPetals);
-      petalMesh.rotation.z = angle;
-      
-      // Tilt the petal slightly outward around its local X-axis to bloom open beautifully
-      petalMesh.rotateOnAxis(new THREE.Vector3(1, 0, 0), 0.38);
-      
-      solidFlowerPetals.add(petalMesh);
-    }
-    
-    scene.add(solidFlowerPetals);
 
     // 8.5 Central Star of Rocío (highly glowing central sphere, appears after blooming)
     const centralStarGeo = new THREE.SphereGeometry(0.65, 24, 24);
@@ -580,9 +537,9 @@ export default function CelestialUniverse() {
     centralStarMesh.visible = false;
     centralStarMesh.userData = { isCentral: true };
 
-    const centralGlowGeo = new THREE.PlaneGeometry(9.5, 9.5); // Large radiant cyan glow
+    const centralGlowGeo = new THREE.PlaneGeometry(9.5, 9.5);
     const centralGlowMat = new THREE.MeshBasicMaterial({
-      map: blueGlowTexture,
+      map: warmStarGlowTexture,
       transparent: true,
       blending: THREE.AdditiveBlending,
       opacity: 0.0,
@@ -605,7 +562,7 @@ export default function CelestialUniverse() {
 
     const coreGlowGeo = new THREE.PlaneGeometry(8.0, 8.0);
     const coreGlowMat = new THREE.MeshBasicMaterial({
-      map: createRadialGlowTexture('#fef3c7', 64),
+      map: coreGlowTexture,
       transparent: true,
       blending: THREE.AdditiveBlending,
       opacity: 0.0,
@@ -660,8 +617,7 @@ export default function CelestialUniverse() {
       centralStarMesh,
       centralGlowMesh,
       coreStarMesh,
-      coreGlowMesh,
-      solidFlowerPetals
+      coreGlowMesh
     };
 
     const handleResize = () => {
@@ -684,7 +640,6 @@ export default function CelestialUniverse() {
     const handleWheel = (e: WheelEvent) => {
       if (isCinematicActive) return;
       e.preventDefault();
-      setHasStartedExploring(true);
       
       const delta = e.deltaY * 0.0006;
       // Scroll limit caps at 85% until constellation is awakened (5 stars tapped)
@@ -696,7 +651,6 @@ export default function CelestialUniverse() {
       if (isCinematicActive) return;
       scrollRef.current.touchStart = e.touches[0].clientY;
       scrollRef.current.isDragging = true;
-      setHasStartedExploring(true);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
@@ -961,7 +915,7 @@ export default function CelestialUniverse() {
             const memoryCard = STAR_MEMORIES[memoryIdx % STAR_MEMORIES.length];
             setUnlockedMemory({
               id,
-              image: memoryCard.image,
+              imageName: memoryCard.imageName,
               title: memoryCard.title,
               text: memoryCard.text
             });
@@ -1226,12 +1180,12 @@ export default function CelestialUniverse() {
           currentMat.opacity += (targetOpacity - currentMat.opacity) * 0.1;
           
           // Animate core glow pulse
-          const pulseSpeed = 4.0 + holdProgress * 8.0; // pulses faster as they hold!
-          const pulseFactor = (1.5 + holdProgress * 1.8) + Math.sin(time * pulseSpeed) * (0.2 + holdProgress * 0.4);
+          const pulseSpeed = 3.5 + holdProgress * 6.0;
+          const pulseFactor = (1.12 + holdProgress * 0.95) + Math.sin(time * pulseSpeed) * (0.12 + holdProgress * 0.18);
           three.coreGlowMesh.scale.set(pulseFactor, pulseFactor, 1.0);
           
           const coreGlowMat = three.coreGlowMesh.material as THREE.MeshBasicMaterial;
-          coreGlowMat.opacity = (0.75 + holdProgress * 0.25) * (1.0 - bloomProgress.value);
+          coreGlowMat.opacity = (0.34 + holdProgress * 0.18) * (1.0 - bloomProgress.value);
 
           // Track screen projection of core star for 3D overlay
           if (!isCinematicActive) {
@@ -1341,7 +1295,7 @@ export default function CelestialUniverse() {
       }
 
       // Slowly fade in flower particles as they get activated
-      (stardustFlower.material as THREE.PointsMaterial).opacity = Math.min(0.95, bloomVal * 1.5);
+      (stardustFlower.material as THREE.PointsMaterial).opacity = Math.min(0.72, bloomVal * 1.15);
 
       const flowerGeoPos = stardustFlower.geometry.attributes.position;
       const positions = flowerGeoPos.array as Float32Array;
@@ -1368,12 +1322,24 @@ export default function CelestialUniverse() {
 
         // Beautiful layered petal breathing once assembled
         if (particleProgress >= 1.0) {
-          const petalIdx = i % 8;
-          const petalFreq = time * 1.6 + petalIdx * 1.4;
-          const drift = Math.sin(petalFreq) * 0.32;
-          x += Math.cos(petalFreq) * drift;
-          y += Math.sin(petalFreq) * drift;
-          z += Math.sin(petalFreq * 0.5) * 0.18;
+          if (i < FLOWER_CORE_COUNT) {
+            const coreFreq = time * 2.2 + i * 0.015;
+            x += Math.cos(coreFreq) * 0.05;
+            y += Math.sin(coreFreq) * 0.05;
+            z += Math.sin(coreFreq * 0.7) * 0.04;
+          } else {
+            const petalParticleIndex = i - FLOWER_CORE_COUNT;
+            const isInnerRing = petalParticleIndex < FLOWER_INNER_RING_COUNT;
+            const localIndex = isInnerRing
+              ? petalParticleIndex
+              : petalParticleIndex - FLOWER_INNER_RING_COUNT;
+            const petalIdx = localIndex % FLOWER_PETAL_COUNT;
+            const petalFreq = time * (isInnerRing ? 1.8 : 1.35) + petalIdx * 1.25;
+            const drift = Math.sin(petalFreq) * (isInnerRing ? 0.16 : 0.24);
+            x += Math.cos(petalFreq) * drift;
+            y += Math.sin(petalFreq) * drift * 0.6;
+            z += Math.sin(petalFreq * 0.5) * (isInnerRing ? 0.09 : 0.15);
+          }
         }
 
         positions[i * 3] = x;
@@ -1382,34 +1348,7 @@ export default function CelestialUniverse() {
       }
       flowerGeoPos.needsUpdate = true;
 
-      // Spin flower gracefully
-      stardustFlower.rotation.z = time * 0.04 + bloomVal * 0.45;
-
-      // Sync 3D solid flower petals with stardustPoints!
-      if (three.solidFlowerPetals) {
-        three.solidFlowerPetals.rotation.z = stardustFlower.rotation.z;
-        
-        // Scale and animate flare based on bloom value
-        const s = bloomVal * bloomScale.value;
-        three.solidFlowerPetals.scale.set(s, s, s);
-        
-        // Dynamically adjust petal opacity according to bloom value (if not overridden by cinematic final timeline)
-        if (!isCinematicActive) {
-          const firstMesh = three.solidFlowerPetals.children[0] as THREE.Mesh;
-          if (firstMesh && firstMesh.material) {
-            (firstMesh.material as THREE.MeshBasicMaterial).opacity = Math.min(0.95, bloomVal * 1.5);
-          }
-        }
-
-        // Add small, natural, breathing micro-movements to the solid petals for an incredibly organic feel!
-        three.solidFlowerPetals.children.forEach((petal, idx) => {
-          const pMesh = petal as THREE.Mesh;
-          const pulseSpeed = time * 1.5 + idx * 1.2;
-          // Petal breathing: soft, tiny, organic wave on local tilt
-          const tiltFactor = 0.38 + Math.sin(pulseSpeed) * 0.04 * bloomVal;
-          pMesh.rotation.x = tiltFactor;
-        });
-      }
+      stardustFlower.rotation.z = time * 0.018 + bloomVal * 0.22;
 
       // Gently animate the central star if visible
       if (threeRef.current.centralStarMesh && threeRef.current.centralStarMesh.visible) {
@@ -1538,7 +1477,7 @@ export default function CelestialUniverse() {
 
     // 3. Flower blooms spectacularly! Scale up and disperse petals as galaxies
     tl.to(bloomScale, {
-      value: 1.95,
+      value: 1.45,
       duration: 7.5,
       ease: 'power2.inOut',
       onStart: () => {
@@ -1575,7 +1514,7 @@ export default function CelestialUniverse() {
 
     // 5. Spin majestic flower
     tl.to(three.stardustFlower.rotation, {
-      z: '+=5.5',
+      z: '+=3.2',
       duration: 13.0,
       ease: 'power2.inOut'
     }, 3.0);
@@ -1586,17 +1525,6 @@ export default function CelestialUniverse() {
       duration: 7.0,
       ease: 'power1.inOut'
     }, 11.0);
-
-    if (three.solidFlowerPetals) {
-      const firstMesh = three.solidFlowerPetals.children[0] as THREE.Mesh;
-      if (firstMesh && firstMesh.material) {
-        tl.to(firstMesh.material, {
-          opacity: 0.15,
-          duration: 7.0,
-          ease: 'power1.inOut'
-        }, 11.0);
-      }
-    }
 
     // 7. Letter-by-letter drawing of the magical sentence - starts earlier
     tl.call(() => {
@@ -1681,7 +1609,7 @@ export default function CelestialUniverse() {
       <div className="absolute bottom-[-20%] right-[-10%] w-[70%] h-[70%] rounded-full bg-cyan-950/15 blur-[100px] pointer-events-none z-0"></div>
 
       {/* Design Theme Azure Glow for the Star Flower Core */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-cyan-200/5 blur-[80px] pointer-events-none z-0"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[420px] rounded-full bg-cyan-200/[0.025] blur-[92px] pointer-events-none z-0"></div>
 
       {/* Immersive WebGL Background Canvas */}
       <canvas
@@ -1702,9 +1630,9 @@ export default function CelestialUniverse() {
               top: `${item.y}%`,
               opacity: item.opacity,
               transform: `translate(-50%, -50%) scale(${item.scale})`,
-              textShadow: '0px 0px 4px rgba(0,0,0,1), 1px 1px 2px rgba(0,0,0,1), -1px -1px 2px rgba(0,0,0,1), 1px -1px 2px rgba(0,0,0,1), -1px 1px 2px rgba(0,0,0,1)'
+              textShadow: '0 10px 24px rgba(0, 0, 0, 0.28)'
             }}
-            className="absolute font-caveat text-2xl sm:text-3xl text-amber-200 font-bold tracking-wide whitespace-nowrap transition-transform duration-75 select-none"
+            className="absolute max-w-[min(320px,82vw)] rounded-[1.4rem] border border-amber-100/25 bg-[#1f1408]/72 px-4 py-2.5 text-center font-marcellus text-base sm:text-lg text-[#fff7e1] leading-relaxed tracking-[0.06em] whitespace-normal backdrop-blur-md shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition-transform duration-75 select-none"
           >
             {item.text}
           </div>
@@ -1730,6 +1658,7 @@ export default function CelestialUniverse() {
       <div className="absolute bottom-0 left-0 w-full h-[15%] bg-gradient-to-t from-white/5 to-transparent pointer-events-none z-20"></div>
 
       {/* Game/Interaction Guides and Status Indicators */}
+      {!isCinematicActive && !showCentralGuide && !isCentralStarClicked && (
       <div className="absolute top-8 right-8 flex flex-col items-end pointer-events-none z-30 select-none">
         <div className="flex items-center space-x-2.5 bg-black/30 backdrop-blur-md border border-white/5 px-4 py-2 rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
           <div className="relative w-2.5 h-2.5 flex items-center justify-center">
@@ -1740,13 +1669,8 @@ export default function CelestialUniverse() {
             {tappedCount} / {REQUIRED_STARS_TO_AWAKEN} Fragmentos de memoria recuperados
           </span>
         </div>
-        {/* Helper subtitle to explain tapping */}
-        {!isReadyToAwaken && (
-          <span className="font-caveat text-sm text-cyan-200/70 mt-2 tracking-wide animate-pulse max-w-xs text-right">
-            Toca los nodos brillantes para liberar recuerdos y desbloquear el cielo...
-          </span>
-        )}
       </div>
+      )}
 
       {/* Ambient Depth Indicator */}
       {!isCinematicActive && (
@@ -1761,21 +1685,6 @@ export default function CelestialUniverse() {
           <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-cyan-200">
             Profundidad: {Math.round(scrollProgress * 100)}%
           </span>
-        </div>
-      )}
-
-      {/* Gentle Scroll Hint at the start */}
-      {!hasStartedExploring && !isCinematicActive && tappedCount === 0 && (
-        <div
-          id="scroll-indicator-hint"
-          className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-30 transition-opacity duration-1000 animate-pulse"
-        >
-          <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-white/40 mb-3 text-center px-4">
-            Desplázate o arrastra para volar por el espacio
-          </span>
-          <div className="w-[1px] h-10 bg-gradient-to-b from-white/30 via-white/10 to-transparent flex justify-center">
-            <div className="w-1 h-1 rounded-full bg-white/60 animate-bounce mt-1" />
-          </div>
         </div>
       )}
 
@@ -1813,10 +1722,10 @@ export default function CelestialUniverse() {
               onTouchEnd={() => setIsHolding(false)}
               style={{
                 boxShadow: coreScreen.isNear
-                  ? `0 0 ${40 + holdProgress * 60}px rgba(254, 243, 199, ${0.25 + holdProgress * 0.65})`
-                  : `0 0 15px rgba(254, 243, 199, 0.05)`,
+                  ? `0 0 ${22 + holdProgress * 26}px rgba(254, 243, 199, ${0.14 + holdProgress * 0.24})`
+                  : `0 0 10px rgba(254, 243, 199, 0.04)`,
                 borderColor: coreScreen.isNear
-                  ? `rgba(254, 243, 199, ${0.2 + holdProgress * 0.8})`
+                  ? `rgba(254, 243, 199, ${0.16 + holdProgress * 0.34})`
                   : `rgba(254, 243, 199, 0.05)`,
               }}
               className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full border backdrop-blur-md flex items-center justify-center transition-all duration-300 relative group ${
@@ -1830,19 +1739,19 @@ export default function CelestialUniverse() {
                 style={{
                   transform: `scale(${coreScreen.isNear ? (1.0 + holdProgress * 1.5) : 0.8})`,
                   backgroundColor: coreScreen.isNear
-                    ? `rgba(254, 243, 199, ${0.75 + holdProgress * 0.25})`
+                    ? `rgba(254, 243, 199, ${0.68 + holdProgress * 0.18})`
                     : 'rgba(254, 243, 199, 0.3)'
                 }}
                 className={`w-5 h-5 rounded-full transition-all duration-100 flex items-center justify-center ${
-                  coreScreen.isNear ? "bg-amber-100 shadow-[0_0_20px_#fef3c7]" : "bg-amber-300/40"
+                  coreScreen.isNear ? "bg-amber-100 shadow-[0_0_12px_rgba(254,243,199,0.55)]" : "bg-amber-300/40"
                 }`}
               />
 
               {/* Shimmer rings (Only when near) */}
               {coreScreen.isNear && (
                 <>
-                  <div className="absolute inset-[-8px] border border-amber-200/15 rounded-full animate-pulse group-hover:scale-105 transition-transform duration-500" />
-                  <div className="absolute inset-[-18px] border border-white/5 rounded-full animate-ping opacity-30" />
+                  <div className="absolute inset-[-6px] border border-amber-200/10 rounded-full animate-pulse group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-[-12px] border border-white/4 rounded-full animate-ping opacity-20" />
                 </>
               )}
 
@@ -1904,10 +1813,9 @@ export default function CelestialUniverse() {
           >
             {/* Aspect image placeholder */}
             <div className="relative aspect-square w-full bg-stone-900 overflow-hidden border border-stone-200 shadow-inner">
-              <img
-                src={unlockedMemory.image}
+              <ManagedImage
+                name={unlockedMemory.imageName}
                 alt={unlockedMemory.title}
-                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover grayscale-[25%] contrast-[105%]"
               />
               <div className="absolute inset-0 bg-amber-900/5 mix-blend-color-burn pointer-events-none" />
@@ -1988,64 +1896,71 @@ export default function CelestialUniverse() {
             ))}
           </div>
 
-          {/* Majestic card container */}
           <div
-            className="relative bg-gradient-to-b from-slate-900/90 to-[#050912]/95 border border-cyan-500/25 p-6 sm:p-8 rounded-2xl shadow-[0_0_60px_rgba(6,182,212,0.3)] max-w-md w-full flex flex-col items-center text-center space-y-6 select-none animate-scaleUp"
+            className="relative max-w-lg w-full overflow-hidden rounded-[2rem] border border-white/12 bg-[linear-gradient(145deg,rgba(9,18,32,0.96),rgba(25,12,28,0.94))] p-2 shadow-[0_22px_80px_rgba(0,0,0,0.45)] select-none animate-scaleUp"
           >
-            {/* Elegant glowing background circle */}
-            <div className="absolute -top-12 w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-cyan-500/15 blur-xl pointer-events-none" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,220,140,0.16),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(56,189,248,0.14),transparent_34%)]" />
+            <div className="relative rounded-[1.6rem] border border-white/8 bg-black/18 px-6 py-7 sm:px-8 sm:py-8 backdrop-blur-xl">
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div className="text-left">
+                  <span className="inline-flex rounded-full border border-amber-200/20 bg-amber-100/8 px-3 py-1 font-cinzel text-[10px] uppercase tracking-[0.34em] text-amber-100/75">
+                    Noche especial
+                  </span>
+                  <h1 className="mt-4 font-cinzel text-2xl sm:text-3xl tracking-[0.28em] text-[#f8f4e8]">
+                    ROCÍO
+                  </h1>
+                  <p className="mt-3 max-w-[16rem] font-marcellus text-sm sm:text-[15px] leading-7 text-white/72">
+                    Una lucecita chapina en medio del cielo entero.
+                  </p>
+                </div>
 
-            {/* Picture in an artistic circular stellar frame */}
-            <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full p-1 bg-gradient-to-tr from-cyan-400 via-amber-200 to-indigo-500 shadow-[0_0_30px_rgba(6,182,212,0.4)] overflow-hidden">
-              <div className="w-full h-full rounded-full overflow-hidden bg-slate-950">
-                <img
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600"
-                  alt="Rocío"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover grayscale-[10%]"
-                />
+                <div className="relative shrink-0">
+                  <div className="absolute inset-[-10px] rounded-full bg-amber-200/16 blur-xl" />
+                  <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full p-[3px] bg-[linear-gradient(135deg,#f5d58a,#8cd7ef,#fff2c4)] shadow-[0_12px_28px_rgba(0,0,0,0.28)]">
+                    <div className="w-full h-full rounded-full overflow-hidden border border-white/18 bg-slate-950">
+                      <ManagedImage
+                        name={FINAL_CELEBRATION_IMAGE}
+                        alt="Rocío"
+                        className="w-full h-full object-cover grayscale-[6%]"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Content segment */}
-            <div className="flex flex-col space-y-4">
-              <h1 className="font-cinzel text-xl sm:text-2xl font-light tracking-[0.25em] text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-amber-100 to-cyan-200 drop-shadow">
-                ROCÍO
-              </h1>
+              <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] px-5 py-5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                <p className="font-caveat text-[1.65rem] sm:text-[1.95rem] leading-tight text-[#f8f0d8]">
+                  "En un universo lleno de estrellas, tú eres la más hermosa de todas."
+                </p>
+                <div className="mt-4 flex items-center gap-3">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-200/30 to-transparent" />
+                  <span className="font-cinzel text-[11px] uppercase tracking-[0.28em] text-amber-200/80">
+                    Feliz cumpleaños
+                  </span>
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-200/30 to-transparent" />
+                </div>
+              </div>
 
-              <p className="font-caveat text-xl sm:text-2xl text-cyan-100/95 leading-relaxed max-w-[320px] mx-auto">
-                "En un universo lleno de estrellas, tú eres la más hermosa de todas."
-              </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <button
+                  onClick={() => {
+                    setIsCentralStarClicked(false);
+                    playCelestialChime(2);
+                  }}
+                  className="w-full rounded-[1.2rem] border border-cyan-200/18 bg-cyan-100/6 px-4 py-3 font-marcellus text-sm tracking-[0.08em] text-cyan-50 hover:bg-cyan-100/10 hover:border-cyan-200/28 transition-all duration-300 cursor-pointer text-center"
+                >
+                  Seguir viendo la flor
+                </button>
 
-              <div className="h-[1px] w-1/2 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent mx-auto my-1" />
-
-              <h2 className="font-cinzel text-2xl sm:text-3xl font-semibold tracking-wider text-amber-200 animate-pulse drop-shadow-[0_0_12px_rgba(251,191,36,0.3)]">
-                ¡Feliz Cumpleaños, Rocío! 🎂💖
-              </h2>
-            </div>
-
-            {/* Controls */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 w-full pt-2">
-              <button
-                onClick={() => {
-                  // Simply close the modal and let Rocío gaze at her stunning full-bloom interactive universe
-                  setIsCentralStarClicked(false);
-                  playCelestialChime(2);
-                }}
-                className="w-full font-sans text-[11px] uppercase tracking-[0.2em] text-cyan-200 hover:text-white border border-cyan-400/30 hover:border-cyan-400 py-3 rounded-full bg-cyan-950/20 hover:bg-cyan-900/30 transition-all duration-300 cursor-pointer text-center font-medium"
-              >
-                Contemplar Flor
-              </button>
-
-              <button
-                onClick={() => {
-                  // Fully reload/restart the page to experience the beautiful celestial animation sequence again!
-                  window.location.reload();
-                }}
-                className="w-full font-sans text-[11px] uppercase tracking-[0.2em] text-slate-900 bg-amber-200 hover:bg-amber-100 py-3 rounded-full transition-all duration-300 cursor-pointer text-center font-semibold shadow-[0_4px_15px_rgba(251,191,36,0.2)] active:scale-95"
-              >
-                Revivir Viaje
-              </button>
+                <button
+                  onClick={() => {
+                    window.location.reload();
+                  }}
+                  className="w-full rounded-[1.2rem] bg-[linear-gradient(135deg,#f6d58a,#f0b95a)] px-4 py-3 font-marcellus text-sm tracking-[0.08em] text-[#38220e] transition-all duration-300 cursor-pointer text-center shadow-[0_10px_24px_rgba(240,185,90,0.24)] hover:brightness-105 active:scale-95"
+                >
+                  Volver a vivirlo
+                </button>
+              </div>
             </div>
           </div>
         </div>
