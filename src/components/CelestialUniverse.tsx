@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
-import { gsap } from 'gsap';
-import { playCelestialChime } from '../utils/audio';
+import React, { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
+import { gsap } from "gsap";
+import { playCelestialChime } from "../utils/audio";
 
 // Interface for floating handwritten sentences spawned when tapping stars
 interface FloatingText {
@@ -25,13 +25,20 @@ interface StarMemoryCard {
   title: string;
 }
 
-type ManagedImageProps = Omit<React.ComponentProps<'img'>, 'src'> & {
+type ManagedImageProps = Omit<React.ComponentProps<"img">, "src"> & {
   name: string;
 };
 
-const CUSTOM_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'] as const;
-const CUSTOM_IMAGE_DIRECTORY = '/images/custom';
-const FINAL_CELEBRATION_IMAGE = 'img7';
+const CUSTOM_IMAGE_EXTENSIONS = [
+  "jpg",
+  "jpeg",
+  "png",
+  "webp",
+  "gif",
+  "svg",
+] as const;
+const CUSTOM_IMAGE_DIRECTORY = "/images/custom";
+const FINAL_CELEBRATION_IMAGE = "img7";
 const FLOWER_PETAL_COUNT = 6;
 const FLOWER_CORE_COUNT = 320;
 const FLOWER_INNER_RING_COUNT = 480;
@@ -48,7 +55,9 @@ function ManagedImage({ name, onError, ...props }: ManagedImageProps) {
   }, [name]);
 
   const currentExtension =
-    CUSTOM_IMAGE_EXTENSIONS[Math.min(candidateIndex, CUSTOM_IMAGE_EXTENSIONS.length - 1)];
+    CUSTOM_IMAGE_EXTENSIONS[
+      Math.min(candidateIndex, CUSTOM_IMAGE_EXTENSIONS.length - 1)
+    ];
 
   return (
     <img
@@ -68,34 +77,111 @@ function ManagedImage({ name, onError, ...props }: ManagedImageProps) {
 
 // Datos de las tarjetas de recuerdos de ensueño para Rocío
 const STAR_MEMORIES = [
-  { title: "El Destello de Rocío", text: "En un mundo de infinitas opciones, nuestros caminos se alinearon perfectamente bajo la luna silenciosa, Rocío.", imageName: 'img1' },
-  { title: "Ecos de Luz", text: "Incluso en la noche más profunda, una suave luz guía tus pasos, Rocío, susurrando secretos del mañana.", imageName: 'img2' },
-  { title: "Mar Bioluminiscente", text: "El océano contiene reflejos del cosmos, brillando con tus hermosos sueños, Rocío.", imageName: 'img3' },
-  { title: "Jardín del Atardecer", text: "Un campo de flores de luz florece bajo tu toque, entonando una melodía de eterna primavera para Rocío.", imageName: 'img4' },
-  { title: "Cuna de Sueños", text: "Descansa tu mente cansada sobre la luna plateada, donde nace la esperanza del mañana para Rocío.", imageName: 'img5' },
-  { title: "Valle de los Vientos", text: "Deja que tus preocupaciones se disuelvan en el viento, Rocío. Eres una viajera de la luz.", imageName: 'img6' },
+  {
+    title: "Una estrella?",
+    text: "Al recordar este momento y todas las veces en que te tapas la cara, solo pienso en que no quieres opacar al resto con tu brillo JAJAJA",
+    imageName: "img1",
+  },
+  {
+    title: "Los ojitos más bellos",
+    text: "¿¿Acaso has sido tú quien cometió el crimen de robarle el brillo a las estrellas para ponertelo en tus ojos??",
+    imageName: "img2",
+  },
+  {
+    title: "Imparable",
+    text: "Hace falta un diluvio para apagar ese brillo que transmites (ni el diluvio sería suficinte)",
+    imageName: "img3",
+  },
+  {
+    title: "Inmensidad, profundidad, retina?",
+    text: "El universo es innecesariamente grande, ¿por qué? porque todo lo que ansío lo puedo encontrar en tus ojos",
+    imageName: "img4",
+  },
+  {
+    title: "Cuna de estrellas",
+    text: "Cada expresión, cada gesto, cada pestañeo es un destello que sueltas",
+    imageName: "img5",
+  },
+  {
+    title: "Valle de los Vientos",
+    text: "Deja que tus preocupaciones se disuelvan en el viento, Rocío. Eres una viajera de la luz.",
+    imageName: "img6",
+  },
 ];
 
 // Coordenadas y frases en español de las estrellas interactivas, agrupadas para móviles con progresión de profundidad
 const INTERACTIVE_STARS_DATA = [
-  { id: '1', pos: new THREE.Vector3(0.0, 3.5, 38), text: "Mira al cielo, Rocío..." },
-  { id: '2', pos: new THREE.Vector3(5.0, 3.0, 30), text: "Un mundo de magia te espera." },
-  { id: '3', pos: new THREE.Vector3(6.5, 1.5, 22), text: "Escucha el susurro de la noche, Rocío." },
-  { id: '4', pos: new THREE.Vector3(4.5, -0.2, 14), text: "Cada estrella guarda una promesa secreta." },
-  { id: '5', pos: new THREE.Vector3(0.5, -1.8, 6), text: "Tu luz brilla más que el propio cosmos, Rocío." },
-  { id: '6', pos: new THREE.Vector3(-4.5, 2.0, 32), text: "Flota suavemente a través de la hermosa oscuridad infinita." },
-  { id: '7', pos: new THREE.Vector3(-5.5, 0.5, 24), text: "Tu corazón contiene un cielo entero, Rocío." },
-  { id: '8', pos: new THREE.Vector3(-3.5, -1.5, 16), text: "La luna guía tus pensamientos más tiernos." },
-  { id: '9', pos: new THREE.Vector3(-1.5, -2.5, 10), text: "Déjate llevar y forma parte de la brisa cósmica." },
-  { id: '10', pos: new THREE.Vector3(2.5, -2.0, 12), text: "Incluso la chispa más pequeña puede iluminar la oscuridad, Rocío." },
-  { id: '11', pos: new THREE.Vector3(4.0, 2.0, 18), text: "Cierra los ojos y contempla la belleza infinita." },
+  {
+    id: "1",
+    pos: new THREE.Vector3(0.0, 3.5, 38),
+    text: "Esto fue en el rally",
+  },
+  {
+    id: "2",
+    pos: new THREE.Vector3(5.0, 3.0, 30),
+    text: "Una vista desde arriba...",
+  },
+  {
+    id: "3",
+    pos: new THREE.Vector3(6.5, 1.5, 22),
+    text: "Haz de luz",
+  },
+  {
+    id: "4",
+    pos: new THREE.Vector3(4.5, -0.2, 14),
+    text: "Cada estrella guarda una promesa secreta.",
+  },
+  {
+    id: "5",
+    pos: new THREE.Vector3(0.5, -1.8, 6),
+    text: "Tu luz brilla más que el propio cosmos",
+  },
+  {
+    id: "6",
+    pos: new THREE.Vector3(-4.5, 2.0, 32),
+    text: "Flota suavemente a través de la hermosa oscuridad infinita.",
+  },
+  {
+    id: "7",
+    pos: new THREE.Vector3(-5.5, 0.5, 24),
+    text: "Tu corazón contiene un cielo entero, Rocío.",
+  },
+  {
+    id: "8",
+    pos: new THREE.Vector3(-3.5, -1.5, 16),
+    text: "La luna guía tus pensamientos más tiernos.",
+  },
+  {
+    id: "9",
+    pos: new THREE.Vector3(-1.5, -2.5, 10),
+    text: "Déjate llevar y forma parte de la brisa cósmica.",
+  },
+  {
+    id: "10",
+    pos: new THREE.Vector3(2.5, -2.0, 12),
+    text: "Incluso la chispa más pequeña puede iluminar la oscuridad, Rocío.",
+  },
+  {
+    id: "11",
+    pos: new THREE.Vector3(4.0, 2.0, 18),
+    text: "Cierra los ojos y contempla la belleza infinita.",
+  },
 ];
 
 // Lines connecting the stars to form a gorgeous celestial constellation structure
 const CONSTELLATION_CONNECTIONS = [
-  [0, 1], [1, 2], [2, 3], // Upper arc
-  [0, 4], [4, 5], [5, 6], [6, 7], [7, 3], // Mid Web
-  [4, 8], [8, 9], [9, 10], [10, 7] // Lower arc
+  [0, 1],
+  [1, 2],
+  [2, 3], // Upper arc
+  [0, 4],
+  [4, 5],
+  [5, 6],
+  [6, 7],
+  [7, 3], // Mid Web
+  [4, 8],
+  [8, 9],
+  [9, 10],
+  [10, 7], // Lower arc
 ];
 
 const FLOWER_COUNT = 2300;
@@ -111,16 +197,23 @@ export default function CelestialUniverse() {
   // Tracking scroll progress visually (virtual scroll)
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isCinematicActive, setIsCinematicActive] = useState(false);
-  const [typedSentence, setTypedSentence] = useState('');
+  const [typedSentence, setTypedSentence] = useState("");
   const [isSentenceVisible, setIsSentenceVisible] = useState(false);
 
   // Core gameplay states
   const [tappedStars, setTappedStars] = useState<Record<string, boolean>>({});
-  const [unlockedMemory, setUnlockedMemory] = useState<StarMemoryCard | null>(null);
+  const [unlockedMemory, setUnlockedMemory] = useState<StarMemoryCard | null>(
+    null,
+  );
   const [holdProgress, setHoldProgress] = useState(0); // 0 to 1 hold value to bloom
   const [isHolding, setIsHolding] = useState(false);
   const [isTooFar, setIsTooFar] = useState<boolean>(true);
-  const [coreScreen, setCoreScreen] = useState<{ x: number; y: number; dist: number; isNear: boolean }>({ x: 50, y: 50, dist: 999, isNear: false });
+  const [coreScreen, setCoreScreen] = useState<{
+    x: number;
+    y: number;
+    dist: number;
+    isNear: boolean;
+  }>({ x: 50, y: 50, dist: 999, isNear: false });
   const tooFarRef = useRef<boolean>(true);
   const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
 
@@ -143,7 +236,7 @@ export default function CelestialUniverse() {
     mouseY: 0,
     tiltX: 0,
     tiltY: 0,
-    cursorWorld: new THREE.Vector3(0, 0, 0)
+    cursorWorld: new THREE.Vector3(0, 0, 0),
   });
 
   // ThreeJS instance refs
@@ -161,7 +254,14 @@ export default function CelestialUniverse() {
     stardustFlower: THREE.Points;
     stardustFlowerPositions: THREE.Vector3[];
     stardustFlowerTargets: THREE.Vector3[];
-    sparkParticles: { pos: THREE.Vector3; vel: THREE.Vector3; size: number; age: number; maxAge: number; color: THREE.Color }[];
+    sparkParticles: {
+      pos: THREE.Vector3;
+      vel: THREE.Vector3;
+      size: number;
+      age: number;
+      maxAge: number;
+      color: THREE.Color;
+    }[];
     sparkPoints: THREE.Points;
     bloomProgress: { value: number };
     bloomScale: { value: number };
@@ -194,51 +294,67 @@ export default function CelestialUniverse() {
       canvas: canvasRef.current,
       antialias: true,
       alpha: true,
-      powerPreference: 'high-performance'
+      powerPreference: "high-performance",
     });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     // Helper: Canvas-generated soft radial gradient glow texture
-    const createRadialGlowTexture = (color: string = '#ffffff', size: number = 64) => {
-      const canvas = document.createElement('canvas');
+    const createRadialGlowTexture = (
+      color: string = "#ffffff",
+      size: number = 64,
+    ) => {
+      const canvas = document.createElement("canvas");
       canvas.width = size;
       canvas.height = size;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (ctx) {
         const half = size / 2;
-        const gradient = ctx.createRadialGradient(half, half, 0, half, half, half);
-        
+        const gradient = ctx.createRadialGradient(
+          half,
+          half,
+          0,
+          half,
+          half,
+          half,
+        );
+
         // Let's parse the color to create a beautiful, rich gradient preserving the base hue!
-        gradient.addColorStop(0, '#ffffff'); // highly intense white core for realistic glow physics
+        gradient.addColorStop(0, "#ffffff"); // highly intense white core for realistic glow physics
         gradient.addColorStop(0.12, color);
-        
+
         // Create soft fade with transparency
-        if (color.startsWith('#')) {
-          const hex = color.replace('#', '');
+        if (color.startsWith("#")) {
+          const hex = color.replace("#", "");
           const r = parseInt(hex.substring(0, 2), 16);
           const g = parseInt(hex.substring(2, 4), 16);
           const b = parseInt(hex.substring(4, 6), 16);
           gradient.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, 0.5)`);
           gradient.addColorStop(0.7, `rgba(${r}, ${g}, ${b}, 0.15)`);
-        } else if (color.startsWith('rgba')) {
-          gradient.addColorStop(0.4, color.replace('1)', '0.5)').replace('0.8)', '0.4)'));
-          gradient.addColorStop(0.7, color.replace('1)', '0.15)').replace('0.8)', '0.1)'));
+        } else if (color.startsWith("rgba")) {
+          gradient.addColorStop(
+            0.4,
+            color.replace("1)", "0.5)").replace("0.8)", "0.4)"),
+          );
+          gradient.addColorStop(
+            0.7,
+            color.replace("1)", "0.15)").replace("0.8)", "0.1)"),
+          );
         } else {
-          gradient.addColorStop(0.4, 'rgba(255, 250, 240, 0.4)');
-          gradient.addColorStop(0.7, 'rgba(235, 200, 255, 0.12)');
+          gradient.addColorStop(0.4, "rgba(255, 250, 240, 0.4)");
+          gradient.addColorStop(0.7, "rgba(235, 200, 255, 0.12)");
         }
-        
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+        gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, size, size);
       }
       return new THREE.CanvasTexture(canvas);
     };
 
-    const starTexture = createRadialGlowTexture('#fff7de', 32);
-    const warmStarGlowTexture = createRadialGlowTexture('#ffd46b', 64);
-    const coreGlowTexture = createRadialGlowTexture('#ffefb3', 64);
+    const starTexture = createRadialGlowTexture("#fff7de", 32);
+    const warmStarGlowTexture = createRadialGlowTexture("#ffd46b", 64);
+    const coreGlowTexture = createRadialGlowTexture("#ffefb3", 64);
 
     // 3. Ambient Dust & Tiny Twinkling Stars (Distant Layer)
     const starCount = 2000;
@@ -253,8 +369,11 @@ export default function CelestialUniverse() {
       starSizes[i] = 0.4 + Math.random() * 0.8;
     }
 
-    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    starGeometry.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
+    starGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(starPositions, 3),
+    );
+    starGeometry.setAttribute("size", new THREE.BufferAttribute(starSizes, 1));
 
     const starMaterial = new THREE.PointsMaterial({
       size: 0.8,
@@ -262,7 +381,7 @@ export default function CelestialUniverse() {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       transparent: true,
-      opacity: 0.7
+      opacity: 0.7,
     });
 
     const backgroundStars = new THREE.Points(starGeometry, starMaterial);
@@ -270,10 +389,10 @@ export default function CelestialUniverse() {
 
     // 4. Parallax Colorful Nebulae (Gris and Journey Inspired Blue Palette)
     const nebulaColors = [
-      'rgba(0, 191, 255, 1)',   // Deep Sky Blue
-      'rgba(30, 144, 255, 1)',  // Dodger Blue
-      'rgba(72, 61, 139, 1)',   // Indigo / Slate Blue
-      'rgba(64, 224, 208, 1)'   // Turquoise / Teal
+      "rgba(0, 191, 255, 1)", // Deep Sky Blue
+      "rgba(30, 144, 255, 1)", // Dodger Blue
+      "rgba(72, 61, 139, 1)", // Indigo / Slate Blue
+      "rgba(64, 224, 208, 1)", // Turquoise / Teal
     ];
 
     const nebulaPoints: THREE.Points[] = [];
@@ -281,11 +400,11 @@ export default function CelestialUniverse() {
       const count = 120;
       const geom = new THREE.BufferGeometry();
       const pos = new Float32Array(count * 3);
-      
+
       const offset = new THREE.Vector3(
         (index - 1.5) * 35 + (Math.random() - 0.5) * 10,
         (Math.random() - 0.5) * 20,
-        -15 - index * 10
+        -15 - index * 10,
       );
 
       for (let i = 0; i < count; i++) {
@@ -294,15 +413,15 @@ export default function CelestialUniverse() {
         pos[i * 3 + 2] = offset.z + (Math.random() - 0.5) * 25;
       }
 
-      geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geom.setAttribute("position", new THREE.BufferAttribute(pos, 3));
 
       const mat = new THREE.PointsMaterial({
         size: 15 + Math.random() * 15,
-        map: createRadialGlowTexture(color.replace('1)', '0.5)'), 128),
+        map: createRadialGlowTexture(color.replace("1)", "0.5)"), 128),
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         transparent: true,
-        opacity: 0.12 + Math.random() * 0.08
+        opacity: 0.12 + Math.random() * 0.08,
       });
 
       const pts = new THREE.Points(geom, mat);
@@ -312,13 +431,13 @@ export default function CelestialUniverse() {
 
     // 5. The Soft Radiant Moon
     const moonGeo = new THREE.PlaneGeometry(16, 16);
-    const moonTexture = createRadialGlowTexture('#fff9e6', 128);
+    const moonTexture = createRadialGlowTexture("#fff9e6", 128);
     const moonMat = new THREE.MeshBasicMaterial({
       map: moonTexture,
       transparent: true,
       blending: THREE.AdditiveBlending,
       opacity: 0.6,
-      depthWrite: false
+      depthWrite: false,
     });
     const moonMesh = new THREE.Mesh(moonGeo, moonMat);
     moonMesh.position.set(15, 12, -15);
@@ -335,19 +454,26 @@ export default function CelestialUniverse() {
       const nodeMat = new THREE.MeshBasicMaterial({
         color: 0xfff4c4,
         transparent: true,
-        opacity: 0.95
+        opacity: 0.95,
       });
       const mesh = new THREE.Mesh(nodeGeo, nodeMat);
       mesh.position.copy(data.pos);
-      mesh.userData = { id: data.id, index, text: data.text, baseScale: 1.0, glowFactor: 1.0, isShooting: false };
-      
+      mesh.userData = {
+        id: data.id,
+        index,
+        text: data.text,
+        baseScale: 1.0,
+        glowFactor: 1.0,
+        isShooting: false,
+      };
+
       const glowGeo = new THREE.PlaneGeometry(5.5, 5.5); // Doubled size for massive radiant shine!
       const glowMat = new THREE.MeshBasicMaterial({
         map: warmStarGlowTexture,
         transparent: true,
         blending: THREE.AdditiveBlending,
         opacity: 0.92,
-        depthWrite: false
+        depthWrite: false,
       });
       const glowMesh = new THREE.Mesh(glowGeo, glowMat);
       mesh.add(glowMesh);
@@ -357,7 +483,7 @@ export default function CelestialUniverse() {
       const hitBoxMat = new THREE.MeshBasicMaterial({
         transparent: true,
         opacity: 0.0,
-        depthWrite: false
+        depthWrite: false,
       });
       const hitBoxMesh = new THREE.Mesh(hitBoxGeo, hitBoxMat);
       hitBoxMesh.userData = { isHitBox: true };
@@ -377,24 +503,30 @@ export default function CelestialUniverse() {
 
     const constellationGeo = new THREE.BufferGeometry();
     const linePositions = new Float32Array(INTERACTIVE_STARS_DATA.length * 3);
-    
+
     INTERACTIVE_STARS_DATA.forEach((data, i) => {
       linePositions[i * 3] = data.pos.x;
       linePositions[i * 3 + 1] = data.pos.y;
       linePositions[i * 3 + 2] = data.pos.z;
     });
 
-    constellationGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+    constellationGeo.setAttribute(
+      "position",
+      new THREE.BufferAttribute(linePositions, 3),
+    );
     constellationGeo.setIndex(lineIndices);
 
     const constellationMat = new THREE.LineBasicMaterial({
       color: 0xe0f7fa,
       transparent: true,
       opacity: 0.0,
-      blending: THREE.AdditiveBlending
+      blending: THREE.AdditiveBlending,
     });
 
-    const constellationLines = new THREE.LineSegments(constellationGeo, constellationMat);
+    const constellationLines = new THREE.LineSegments(
+      constellationGeo,
+      constellationMat,
+    );
     scene.add(constellationLines);
 
     // 8. Stardust flower formed only by star particles
@@ -406,7 +538,7 @@ export default function CelestialUniverse() {
 
     for (let i = 0; i < FLOWER_COUNT; i++) {
       const thetaVal = Math.random() * Math.PI * 2;
-      const phiVal = Math.acos((Math.random() * 2) - 1);
+      const phiVal = Math.acos(Math.random() * 2 - 1);
       const dist = 30 + Math.random() * 45;
       const startX = dist * Math.sin(phiVal) * Math.cos(thetaVal);
       const startY = dist * Math.sin(phiVal) * Math.sin(thetaVal);
@@ -444,7 +576,8 @@ export default function CelestialUniverse() {
         const isInnerRing = petalParticleIndex < FLOWER_INNER_RING_COUNT;
         const isEdgeBand =
           petalParticleIndex >= FLOWER_INNER_RING_COUNT &&
-          petalParticleIndex < FLOWER_INNER_RING_COUNT + FLOWER_EDGE_PARTICLE_COUNT;
+          petalParticleIndex <
+            FLOWER_INNER_RING_COUNT + FLOWER_EDGE_PARTICLE_COUNT;
         const localIndex = isInnerRing
           ? petalParticleIndex
           : petalParticleIndex - FLOWER_INNER_RING_COUNT;
@@ -453,7 +586,7 @@ export default function CelestialUniverse() {
           ? Math.floor(edgeBandIndex / 2) % FLOWER_PETAL_COUNT
           : localIndex % FLOWER_PETAL_COUNT;
         const baseAngle =
-          petalIdx * (Math.PI * 2 / FLOWER_PETAL_COUNT) +
+          petalIdx * ((Math.PI * 2) / FLOWER_PETAL_COUNT) +
           (isInnerRing ? Math.PI / FLOWER_PETAL_COUNT : 0);
 
         const pct = isInnerRing
@@ -466,14 +599,20 @@ export default function CelestialUniverse() {
           pct * (isInnerRing ? 4.8 : isEdgeBand ? 8.7 : 8.4) -
           Math.pow(pct, 2) * (isInnerRing ? 0.3 : isEdgeBand ? 0.58 : 0.68);
         const edgeDirection = isEdgeBand
-          ? edgeBandIndex % 2 === 0 ? -1 : 1
-          : Math.random() > 0.5 ? 1 : -1;
+          ? edgeBandIndex % 2 === 0
+            ? -1
+            : 1
+          : Math.random() > 0.5
+            ? 1
+            : -1;
         const sideOffset = isEdgeBand
-          ? edgeDirection * THREE.MathUtils.lerp(0.94, 1.08, Math.pow(Math.random(), 0.45))
+          ? edgeDirection *
+            THREE.MathUtils.lerp(0.94, 1.08, Math.pow(Math.random(), 0.45))
           : (Math.random() - 0.5) * 2;
         const widthProfile =
           (isInnerRing ? 0.65 : isEdgeBand ? 0.92 : 0.9) +
-          Math.sin(pct * Math.PI) * (isInnerRing ? 2.45 : isEdgeBand ? 4.35 : 4.05);
+          Math.sin(pct * Math.PI) *
+            (isInnerRing ? 2.45 : isEdgeBand ? 4.35 : 4.05);
         const localX = distanceFromCenter;
         const localY =
           sideOffset *
@@ -484,18 +623,46 @@ export default function CelestialUniverse() {
         targetY = localX * Math.sin(baseAngle) + localY * Math.cos(baseAngle);
         targetZ =
           (isInnerRing ? 0.32 : isEdgeBand ? -0.08 : -0.18) +
-          Math.sin(Math.PI * pct) * (isInnerRing ? 1.16 : isEdgeBand ? 1.88 : 1.75) -
+          Math.sin(Math.PI * pct) *
+            (isInnerRing ? 1.16 : isEdgeBand ? 1.88 : 1.75) -
           pct * (isInnerRing ? 0.12 : isEdgeBand ? 0.4 : 0.48) +
           (Math.random() - 0.5) * (isEdgeBand ? 0.11 : 0.16);
 
-        const baseR = THREE.MathUtils.lerp(1.0, isInnerRing ? 0.985 : isEdgeBand ? 0.985 : 0.94, pct);
-        const baseG = THREE.MathUtils.lerp(0.94, isInnerRing ? 0.86 : isEdgeBand ? 0.9 : 0.76, pct);
-        const baseB = THREE.MathUtils.lerp(0.6, isInnerRing ? 0.5 : isEdgeBand ? 0.42 : 0.28, pct);
+        const baseR = THREE.MathUtils.lerp(
+          1.0,
+          isInnerRing ? 0.985 : isEdgeBand ? 0.985 : 0.94,
+          pct,
+        );
+        const baseG = THREE.MathUtils.lerp(
+          0.94,
+          isInnerRing ? 0.86 : isEdgeBand ? 0.9 : 0.76,
+          pct,
+        );
+        const baseB = THREE.MathUtils.lerp(
+          0.6,
+          isInnerRing ? 0.5 : isEdgeBand ? 0.42 : 0.28,
+          pct,
+        );
         const veinStrength = Math.max(0, Math.cos(sideOffset * Math.PI * 3.5));
-        const shadowBlend = veinStrength * (isInnerRing ? 0.18 : isEdgeBand ? 0.12 : 0.28) * (1.0 - pct * 0.25);
-        rCol = THREE.MathUtils.lerp(baseR, isEdgeBand ? 1.0 : 0.88, shadowBlend);
-        gCol = THREE.MathUtils.lerp(baseG, isEdgeBand ? 0.94 : 0.62, shadowBlend);
-        bCol = THREE.MathUtils.lerp(baseB, isEdgeBand ? 0.52 : 0.16, shadowBlend);
+        const shadowBlend =
+          veinStrength *
+          (isInnerRing ? 0.18 : isEdgeBand ? 0.12 : 0.28) *
+          (1.0 - pct * 0.25);
+        rCol = THREE.MathUtils.lerp(
+          baseR,
+          isEdgeBand ? 1.0 : 0.88,
+          shadowBlend,
+        );
+        gCol = THREE.MathUtils.lerp(
+          baseG,
+          isEdgeBand ? 0.94 : 0.62,
+          shadowBlend,
+        );
+        bCol = THREE.MathUtils.lerp(
+          baseB,
+          isEdgeBand ? 0.52 : 0.16,
+          shadowBlend,
+        );
       }
 
       stardustFlowerTargets.push(new THREE.Vector3(targetX, targetY, targetZ));
@@ -509,8 +676,14 @@ export default function CelestialUniverse() {
       flowerColors[i * 3 + 2] = bCol;
     }
 
-    flowerGeometry.setAttribute('position', new THREE.BufferAttribute(flowerPositions, 3));
-    flowerGeometry.setAttribute('color', new THREE.BufferAttribute(flowerColors, 3));
+    flowerGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(flowerPositions, 3),
+    );
+    flowerGeometry.setAttribute(
+      "color",
+      new THREE.BufferAttribute(flowerColors, 3),
+    );
 
     const flowerMat = new THREE.PointsMaterial({
       size: 0.64,
@@ -519,7 +692,7 @@ export default function CelestialUniverse() {
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       transparent: true,
-      opacity: 0.0
+      opacity: 0.0,
     });
 
     const stardustFlower = new THREE.Points(flowerGeometry, flowerMat);
@@ -530,7 +703,7 @@ export default function CelestialUniverse() {
     const centralStarMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.0 // starts invisible, fades in during finale
+      opacity: 0.0, // starts invisible, fades in during finale
     });
     const centralStarMesh = new THREE.Mesh(centralStarGeo, centralStarMat);
     centralStarMesh.position.set(0, 0, 0);
@@ -543,7 +716,7 @@ export default function CelestialUniverse() {
       transparent: true,
       blending: THREE.AdditiveBlending,
       opacity: 0.0,
-      depthWrite: false
+      depthWrite: false,
     });
     const centralGlowMesh = new THREE.Mesh(centralGlowGeo, centralGlowMat);
     centralStarMesh.add(centralGlowMesh);
@@ -554,7 +727,7 @@ export default function CelestialUniverse() {
     const coreStarMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.0
+      opacity: 0.0,
     });
     const coreStarMesh = new THREE.Mesh(coreStarGeo, coreStarMat);
     coreStarMesh.position.set(0, 0, 4);
@@ -566,25 +739,35 @@ export default function CelestialUniverse() {
       transparent: true,
       blending: THREE.AdditiveBlending,
       opacity: 0.0,
-      depthWrite: false
+      depthWrite: false,
     });
     const coreGlowMesh = new THREE.Mesh(coreGlowGeo, coreGlowMat);
     coreStarMesh.add(coreGlowMesh);
     scene.add(coreStarMesh);
 
     // 9. Interactive Particle Splash Engine (Spark Trails)
-    const sparkParticles: { pos: THREE.Vector3; vel: THREE.Vector3; size: number; age: number; maxAge: number; color: THREE.Color }[] = [];
+    const sparkParticles: {
+      pos: THREE.Vector3;
+      vel: THREE.Vector3;
+      size: number;
+      age: number;
+      maxAge: number;
+      color: THREE.Color;
+    }[] = [];
     const sparkGeometry = new THREE.BufferGeometry();
     const sparkPosArray = new Float32Array(MAX_SPARKS * 3);
-    sparkGeometry.setAttribute('position', new THREE.BufferAttribute(sparkPosArray, 3));
+    sparkGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(sparkPosArray, 3),
+    );
 
     const sparkMat = new THREE.PointsMaterial({
       size: 0.9,
-      map: createRadialGlowTexture('#ffd180', 32),
+      map: createRadialGlowTexture("#ffd180", 32),
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       transparent: true,
-      opacity: 0.9
+      opacity: 0.9,
     });
 
     const sparkPoints = new THREE.Points(sparkGeometry, sparkMat);
@@ -617,7 +800,7 @@ export default function CelestialUniverse() {
       centralStarMesh,
       centralGlowMesh,
       coreStarMesh,
-      coreGlowMesh
+      coreGlowMesh,
     };
 
     const handleResize = () => {
@@ -627,10 +810,10 @@ export default function CelestialUniverse() {
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
       renderer.dispose();
     };
   }, []);
@@ -640,11 +823,14 @@ export default function CelestialUniverse() {
     const handleWheel = (e: WheelEvent) => {
       if (isCinematicActive) return;
       e.preventDefault();
-      
+
       const delta = e.deltaY * 0.0006;
       // Scroll limit caps at 85% until constellation is awakened (5 stars tapped)
       const capLimit = isReadyToAwaken ? 1.0 : 0.85;
-      scrollRef.current.target = Math.max(0, Math.min(capLimit, scrollRef.current.target + delta));
+      scrollRef.current.target = Math.max(
+        0,
+        Math.min(capLimit, scrollRef.current.target + delta),
+      );
     };
 
     const handleTouchStart = (e: TouchEvent) => {
@@ -659,9 +845,12 @@ export default function CelestialUniverse() {
 
       const currentY = e.touches[0].clientY;
       const deltaY = scrollRef.current.touchStart - currentY;
-      
+
       const capLimit = isReadyToAwaken ? 1.0 : 0.85;
-      scrollRef.current.target = Math.max(0, Math.min(capLimit, scrollRef.current.target + deltaY * 0.0015));
+      scrollRef.current.target = Math.max(
+        0,
+        Math.min(capLimit, scrollRef.current.target + deltaY * 0.0015),
+      );
       scrollRef.current.touchStart = currentY;
 
       const touch = e.touches[0];
@@ -692,28 +881,34 @@ export default function CelestialUniverse() {
 
     const container = containerRef.current;
     if (container) {
-      container.addEventListener('wheel', handleWheel, { passive: false });
-      container.addEventListener('touchstart', handleTouchStart, { passive: true });
-      container.addEventListener('touchmove', handleTouchMove, { passive: true });
-      container.addEventListener('touchend', handleTouchEnd, { passive: true });
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('deviceorientation', handleDeviceOrientation);
+      container.addEventListener("wheel", handleWheel, { passive: false });
+      container.addEventListener("touchstart", handleTouchStart, {
+        passive: true,
+      });
+      container.addEventListener("touchmove", handleTouchMove, {
+        passive: true,
+      });
+      container.addEventListener("touchend", handleTouchEnd, { passive: true });
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("deviceorientation", handleDeviceOrientation);
     }
 
     return () => {
       if (container) {
-        container.removeEventListener('wheel', handleWheel);
-        container.removeEventListener('touchstart', handleTouchStart);
-        container.removeEventListener('touchmove', handleTouchMove);
-        container.removeEventListener('touchend', handleTouchEnd);
+        container.removeEventListener("wheel", handleWheel);
+        container.removeEventListener("touchstart", handleTouchStart);
+        container.removeEventListener("touchmove", handleTouchMove);
+        container.removeEventListener("touchend", handleTouchEnd);
       }
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('deviceorientation', handleDeviceOrientation);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("deviceorientation", handleDeviceOrientation);
     };
   }, [isCinematicActive, isReadyToAwaken]);
 
   // Unified Pointer events to cleanly separate dragging/scrolling from clicking/tapping
-  const handleCanvasPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+  const handleCanvasPointerDown = (
+    e: React.PointerEvent<HTMLCanvasElement>,
+  ) => {
     pointerDownPos.current = { x: e.clientX, y: e.clientY };
   };
 
@@ -742,7 +937,10 @@ export default function CelestialUniverse() {
     // If cinematic is active, we ONLY check for central star clicks
     if (isCinematicActive) {
       const targets: THREE.Object3D[] = [];
-      if (threeRef.current.centralStarMesh && threeRef.current.centralStarMesh.visible) {
+      if (
+        threeRef.current.centralStarMesh &&
+        threeRef.current.centralStarMesh.visible
+      ) {
         targets.push(threeRef.current.centralStarMesh);
       }
       if (targets.length === 0) return;
@@ -753,7 +951,10 @@ export default function CelestialUniverse() {
 
       if (intersects.length > 0) {
         const star = intersects[0].object as THREE.Mesh;
-        if (star.userData.isCentral || (star.parent && star.parent.userData.isCentral)) {
+        if (
+          star.userData.isCentral ||
+          (star.parent && star.parent.userData.isCentral)
+        ) {
           setIsCentralStarClicked(true);
           playCelestialChime(3);
           playCelestialChime(6);
@@ -780,7 +981,10 @@ export default function CelestialUniverse() {
 
       // Only allow tapping the active star in sequence, and only up to the limit!
       const currentActiveIndex = Object.keys(tappedStars).length;
-      if (currentActiveIndex >= REQUIRED_STARS_TO_AWAKEN || index !== currentActiveIndex) {
+      if (
+        currentActiveIndex >= REQUIRED_STARS_TO_AWAKEN ||
+        index !== currentActiveIndex
+      ) {
         return; // Ignore click on non-active stars to guide the user sequence!
       }
 
@@ -800,33 +1004,50 @@ export default function CelestialUniverse() {
           x: screenX,
           y: screenY - 5,
           opacity: 0,
-          scale: 0.8
+          scale: 0.8,
         };
 
-        setFloatingTexts(prev => [...prev, newText]);
+        setFloatingTexts((prev) => [...prev, newText]);
         gsap.to(newText, {
           opacity: 1,
           scale: 1.0,
           y: screenY - 12,
           duration: 1.0,
-          ease: 'power2.out',
+          ease: "power2.out",
           onUpdate: () => {
-            setFloatingTexts(prev => prev.map(t => t.id === newId ? { ...t, opacity: newText.opacity, y: newText.y, scale: newText.scale } : t));
+            setFloatingTexts((prev) =>
+              prev.map((t) =>
+                t.id === newId
+                  ? {
+                      ...t,
+                      opacity: newText.opacity,
+                      y: newText.y,
+                      scale: newText.scale,
+                    }
+                  : t,
+              ),
+            );
           },
           onComplete: () => {
             gsap.to(newText, {
               opacity: 0,
               y: screenY - 18,
               duration: 1.0,
-              ease: 'power2.in',
+              ease: "power2.in",
               onUpdate: () => {
-                setFloatingTexts(prev => prev.map(t => t.id === newId ? { ...t, opacity: newText.opacity, y: newText.y } : t));
+                setFloatingTexts((prev) =>
+                  prev.map((t) =>
+                    t.id === newId
+                      ? { ...t, opacity: newText.opacity, y: newText.y }
+                      : t,
+                  ),
+                );
               },
               onComplete: () => {
-                setFloatingTexts(prev => prev.filter(t => t.id !== newId));
-              }
+                setFloatingTexts((prev) => prev.filter((t) => t.id !== newId));
+              },
             });
-          }
+          },
         });
         return;
       }
@@ -852,7 +1073,7 @@ export default function CelestialUniverse() {
         y: targetPos.y,
         z: targetPos.z,
         duration: 1.5,
-        ease: 'back.in(1.2)',
+        ease: "back.in(1.2)",
         onUpdate: () => {
           // Intense gold trail
           const sparks = threeRef.current?.sparkParticles;
@@ -863,12 +1084,12 @@ export default function CelestialUniverse() {
                 vel: new THREE.Vector3(
                   (Math.random() - 0.5) * 3,
                   (Math.random() - 0.5) * 3,
-                  (Math.random() - 0.5) * 3
+                  (Math.random() - 0.5) * 3,
                 ),
                 size: 0.4 + Math.random() * 0.6,
                 age: 0,
                 maxAge: 40,
-                color: new THREE.Color('#ffe082')
+                color: new THREE.Color("#ffe082"),
               });
             }
           }
@@ -876,7 +1097,7 @@ export default function CelestialUniverse() {
         onComplete: () => {
           isStarShooting.current = false;
           star.userData.isShooting = false;
-          
+
           // Hide mesh
           star.visible = false;
 
@@ -886,12 +1107,12 @@ export default function CelestialUniverse() {
             const crashPos = star.position.clone();
             for (let i = 0; i < 140; i++) {
               const theta = Math.random() * Math.PI * 2;
-              const phi = Math.acos((Math.random() * 2) - 1);
+              const phi = Math.acos(Math.random() * 2 - 1);
               const spd = 6.0 + Math.random() * 9.0;
               const vel = new THREE.Vector3(
                 Math.sin(phi) * Math.cos(theta) * spd,
                 Math.sin(phi) * Math.sin(theta) * spd,
-                (Math.random() - 0.5) * 4.0
+                (Math.random() - 0.5) * 4.0,
               );
               sparks.push({
                 pos: crashPos.clone(),
@@ -899,7 +1120,7 @@ export default function CelestialUniverse() {
                 size: 0.6 + Math.random() * 0.8,
                 age: 0,
                 maxAge: 120 + Math.random() * 60,
-                color: new THREE.Color(i % 2 === 0 ? '#ffb74d' : '#80deea')
+                color: new THREE.Color(i % 2 === 0 ? "#ffb74d" : "#80deea"),
               });
             }
           }
@@ -909,7 +1130,7 @@ export default function CelestialUniverse() {
           playCelestialChime(index + 5);
 
           // Record as tapped & show gorgeous vintage polaroid card
-          setTappedStars(prev => {
+          setTappedStars((prev) => {
             const updated = { ...prev, [id]: true };
             const memoryIdx = Object.keys(updated).length - 1;
             const memoryCard = STAR_MEMORIES[memoryIdx % STAR_MEMORIES.length];
@@ -917,11 +1138,11 @@ export default function CelestialUniverse() {
               id,
               imageName: memoryCard.imageName,
               title: memoryCard.title,
-              text: memoryCard.text
+              text: memoryCard.text,
             });
             return updated;
           });
-        }
+        },
       });
 
       // Spawn temporary float text as well
@@ -937,33 +1158,50 @@ export default function CelestialUniverse() {
         x: screenX,
         y: screenY - 5,
         opacity: 0,
-        scale: 0.8
+        scale: 0.8,
       };
 
-      setFloatingTexts(prev => [...prev, newText]);
+      setFloatingTexts((prev) => [...prev, newText]);
       gsap.to(newText, {
         opacity: 1,
         scale: 1.1,
         y: screenY - 14,
         duration: 1.5,
-        ease: 'power2.out',
+        ease: "power2.out",
         onUpdate: () => {
-          setFloatingTexts(prev => prev.map(t => t.id === newId ? { ...t, opacity: newText.opacity, y: newText.y, scale: newText.scale } : t));
+          setFloatingTexts((prev) =>
+            prev.map((t) =>
+              t.id === newId
+                ? {
+                    ...t,
+                    opacity: newText.opacity,
+                    y: newText.y,
+                    scale: newText.scale,
+                  }
+                : t,
+            ),
+          );
         },
         onComplete: () => {
           gsap.to(newText, {
             opacity: 0,
             y: screenY - 22,
             duration: 2.0,
-            ease: 'power2.inOut',
+            ease: "power2.inOut",
             onUpdate: () => {
-              setFloatingTexts(prev => prev.map(t => t.id === newId ? { ...t, opacity: newText.opacity, y: newText.y } : t));
+              setFloatingTexts((prev) =>
+                prev.map((t) =>
+                  t.id === newId
+                    ? { ...t, opacity: newText.opacity, y: newText.y }
+                    : t,
+                ),
+              );
             },
             onComplete: () => {
-              setFloatingTexts(prev => prev.filter(t => t.id !== newId));
-            }
+              setFloatingTexts((prev) => prev.filter((t) => t.id !== newId));
+            },
           });
-        }
+        },
       });
     } else {
       // Tap space effects: light-flower ring
@@ -971,19 +1209,23 @@ export default function CelestialUniverse() {
       vec.unproject(camera);
       const dir = vec.sub(camera.position).normalize();
       const distance = -camera.position.z / dir.z;
-      const clickWorldPos = camera.position.clone().add(dir.multiplyScalar(distance));
+      const clickWorldPos = camera.position
+        .clone()
+        .add(dir.multiplyScalar(distance));
 
       const flowerPetals = 8;
       const glowColors = [0xe0f7fa, 0xfff9e6, 0xffd180]; // Original warm/celestial colors
-      const col = new THREE.Color(glowColors[Math.floor(Math.random() * glowColors.length)]);
-      
+      const col = new THREE.Color(
+        glowColors[Math.floor(Math.random() * glowColors.length)],
+      );
+
       const sparkParticles = threeRef.current.sparkParticles;
       for (let i = 0; i < flowerPetals; i++) {
         const angle = (i / flowerPetals) * Math.PI * 2;
         const vel = new THREE.Vector3(
           Math.cos(angle) * 3.5,
           Math.sin(angle) * 3.5,
-          (Math.random() - 0.5) * 1.5
+          (Math.random() - 0.5) * 1.5,
         );
         sparkParticles.push({
           pos: clickWorldPos.clone(),
@@ -991,7 +1233,7 @@ export default function CelestialUniverse() {
           size: 0.8,
           age: 0,
           maxAge: 75,
-          color: col
+          color: col,
         });
       }
     }
@@ -1025,14 +1267,15 @@ export default function CelestialUniverse() {
         sparkPoints,
         bloomProgress,
         bloomScale,
-        bloomBrighten
+        bloomBrighten,
       } = three;
 
       const time = performance.now() * 0.001;
 
       // 1. Smoothly interpolate virtual scroll progress
       if (!isCinematicActive) {
-        scrollRef.current.current += (scrollRef.current.target - scrollRef.current.current) * 0.06;
+        scrollRef.current.current +=
+          (scrollRef.current.target - scrollRef.current.current) * 0.06;
       }
       const scrollVal = scrollRef.current.current;
       setScrollProgress(scrollVal);
@@ -1062,26 +1305,41 @@ export default function CelestialUniverse() {
       });
 
       // Twinkle background stars
-      const starSizes = backgroundStars.geometry.attributes.size.array as Float32Array;
+      const starSizes = backgroundStars.geometry.attributes.size
+        .array as Float32Array;
       for (let i = 0; i < starSizes.length; i++) {
         starSizes[i] = (0.4 + Math.abs(Math.sin(time * 1.5 + i))) * 0.9;
       }
       backgroundStars.geometry.attributes.size.needsUpdate = true;
 
       // 3. Moon glow breathing and scroll opacity
-      const moonOpacity = 0.6 - (scrollVal * 0.5) + (Math.sin(time * 0.6) * 0.08) + bloomBrighten.value * 0.4;
-      (moonMesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0.1, Math.min(1.0, moonOpacity));
+      const moonOpacity =
+        0.6 -
+        scrollVal * 0.5 +
+        Math.sin(time * 0.6) * 0.08 +
+        bloomBrighten.value * 0.4;
+      (moonMesh.material as THREE.MeshBasicMaterial).opacity = Math.max(
+        0.1,
+        Math.min(1.0, moonOpacity),
+      );
       const moonPulse = 1.0 + Math.sin(time * 0.5) * 0.03;
       moonMesh.scale.set(moonPulse, moonPulse, 1);
 
       // 4. Constellation Lines Reveal
-      const linesOpacity = Math.max(0, Math.min(0.65, (scrollVal - 0.15) * 1.8));
-      (constellationLines.material as THREE.LineBasicMaterial).opacity = linesOpacity * (1.0 - bloomProgress.value);
+      const linesOpacity = Math.max(
+        0,
+        Math.min(0.65, (scrollVal - 0.15) * 1.8),
+      );
+      (constellationLines.material as THREE.LineBasicMaterial).opacity =
+        linesOpacity * (1.0 - bloomProgress.value);
 
       const currentActiveIndex = Object.keys(tappedStars).length;
 
       // Update isTooFar state reactively for the active star to show guided feedback
-      if (currentActiveIndex < REQUIRED_STARS_TO_AWAKEN && interactiveStarMeshes[currentActiveIndex]) {
+      if (
+        currentActiveIndex < REQUIRED_STARS_TO_AWAKEN &&
+        interactiveStarMeshes[currentActiveIndex]
+      ) {
         const activeStar = interactiveStarMeshes[currentActiveIndex];
         const dist = camera.position.distanceTo(activeStar.position);
         const tooFar = dist > 18.0;
@@ -1092,11 +1350,17 @@ export default function CelestialUniverse() {
       }
 
       // 5. Interactive Star Nodes repulsion physics
-      const tempVec = new THREE.Vector3(scrollRef.current.mouseX, scrollRef.current.mouseY, 0.5);
+      const tempVec = new THREE.Vector3(
+        scrollRef.current.mouseX,
+        scrollRef.current.mouseY,
+        0.5,
+      );
       tempVec.unproject(camera);
       const direction = tempVec.sub(camera.position).normalize();
       const distToPlane = -camera.position.z / direction.z;
-      const cursorWorld = camera.position.clone().add(direction.multiplyScalar(distToPlane));
+      const cursorWorld = camera.position
+        .clone()
+        .add(direction.multiplyScalar(distToPlane));
 
       interactiveStarMeshes.forEach((mesh, idx) => {
         // If star has been tapped and is shooting, skip home repositions
@@ -1115,9 +1379,11 @@ export default function CelestialUniverse() {
           const glow = mesh.children[0] as THREE.Mesh;
           if (glow) {
             glow.scale.set(0.35, 0.35, 1.0);
-            (glow.material as THREE.MeshBasicMaterial).opacity = 0.08 * (1.0 - bloomProgress.value);
+            (glow.material as THREE.MeshBasicMaterial).opacity =
+              0.08 * (1.0 - bloomProgress.value);
           }
-          (mesh.material as THREE.MeshBasicMaterial).opacity = 0.22 * (1.0 - bloomProgress.value);
+          (mesh.material as THREE.MeshBasicMaterial).opacity =
+            0.22 * (1.0 - bloomProgress.value);
           // Slowly lerp position back to home pos
           mesh.position.lerp(starHomePositions[idx], 0.1);
           return;
@@ -1130,18 +1396,26 @@ export default function CelestialUniverse() {
         const meshWorldPos = homePos.clone().add(offset);
         const distance = meshWorldPos.distanceTo(cursorWorld);
         const repulseRange = 9.0;
-        
+
         const targetOffset = new THREE.Vector3(0, 0, 0);
         if (distance < repulseRange) {
           const force = (1.0 - distance / repulseRange) * 1.8;
-          targetOffset.copy(meshWorldPos.clone().sub(cursorWorld).normalize().multiplyScalar(force));
+          targetOffset.copy(
+            meshWorldPos
+              .clone()
+              .sub(cursorWorld)
+              .normalize()
+              .multiplyScalar(force),
+          );
           targetOffset.z *= 0.2;
         }
 
         offset.lerp(targetOffset, 0.07);
         mesh.position.copy(homePos).add(offset);
 
-        const isActive = idx === currentActiveIndex && currentActiveIndex < REQUIRED_STARS_TO_AWAKEN;
+        const isActive =
+          idx === currentActiveIndex &&
+          currentActiveIndex < REQUIRED_STARS_TO_AWAKEN;
 
         const glow = mesh.children[0] as THREE.Mesh;
         if (glow) {
@@ -1152,22 +1426,32 @@ export default function CelestialUniverse() {
 
             // Highly glowing active star! Pulsate much faster and scale up if near enough to be touched!
             const pulseSpeed = isNear ? 6.5 : 2.5;
-            const pulseFactor = (isNear ? 2.6 : 1.6) + Math.sin(time * pulseSpeed + idx) * (isNear ? 0.7 : 0.3);
+            const pulseFactor =
+              (isNear ? 2.6 : 1.6) +
+              Math.sin(time * pulseSpeed + idx) * (isNear ? 0.7 : 0.3);
             glow.scale.set(pulseFactor, pulseFactor, 1.0);
-            
-            const baseOpacity = (isNear ? 1.0 : 0.6) + Math.sin(time * 5.0 + idx) * 0.05;
-            (glow.material as THREE.MeshBasicMaterial).opacity = baseOpacity * (1.0 - bloomProgress.value);
-            mesh.scale.set(isNear ? 1.6 : 1.0, isNear ? 1.6 : 1.0, isNear ? 1.6 : 1.0);
+
+            const baseOpacity =
+              (isNear ? 1.0 : 0.6) + Math.sin(time * 5.0 + idx) * 0.05;
+            (glow.material as THREE.MeshBasicMaterial).opacity =
+              baseOpacity * (1.0 - bloomProgress.value);
+            mesh.scale.set(
+              isNear ? 1.6 : 1.0,
+              isNear ? 1.6 : 1.0,
+              isNear ? 1.6 : 1.0,
+            );
           } else {
             // Non-active stars are very dim and subtle
             const pulseFactor = 0.45 + Math.sin(time * 1.5 + idx) * 0.15;
             glow.scale.set(pulseFactor, pulseFactor, 1.0);
-            (glow.material as THREE.MeshBasicMaterial).opacity = 0.12 * (1.0 - bloomProgress.value);
+            (glow.material as THREE.MeshBasicMaterial).opacity =
+              0.12 * (1.0 - bloomProgress.value);
             mesh.scale.set(0.65, 0.65, 0.65);
           }
         }
 
-        (mesh.material as THREE.MeshBasicMaterial).opacity = (isActive ? 1.0 : 0.35) * (1.0 - bloomProgress.value);
+        (mesh.material as THREE.MeshBasicMaterial).opacity =
+          (isActive ? 1.0 : 0.35) * (1.0 - bloomProgress.value);
       });
 
       // Update 3D Core Star of the constellation if awakened
@@ -1176,16 +1460,22 @@ export default function CelestialUniverse() {
           three.coreStarMesh.visible = true;
           // Fade in core star opacity smoothly
           const targetOpacity = Math.max(0, 1.0 - bloomProgress.value);
-          const currentMat = three.coreStarMesh.material as THREE.MeshBasicMaterial;
+          const currentMat = three.coreStarMesh
+            .material as THREE.MeshBasicMaterial;
           currentMat.opacity += (targetOpacity - currentMat.opacity) * 0.1;
-          
+
           // Animate core glow pulse
           const pulseSpeed = 3.5 + holdProgress * 6.0;
-          const pulseFactor = (1.12 + holdProgress * 0.95) + Math.sin(time * pulseSpeed) * (0.12 + holdProgress * 0.18);
+          const pulseFactor =
+            1.12 +
+            holdProgress * 0.95 +
+            Math.sin(time * pulseSpeed) * (0.12 + holdProgress * 0.18);
           three.coreGlowMesh.scale.set(pulseFactor, pulseFactor, 1.0);
-          
-          const coreGlowMat = three.coreGlowMesh.material as THREE.MeshBasicMaterial;
-          coreGlowMat.opacity = (0.34 + holdProgress * 0.18) * (1.0 - bloomProgress.value);
+
+          const coreGlowMat = three.coreGlowMesh
+            .material as THREE.MeshBasicMaterial;
+          coreGlowMat.opacity =
+            (0.34 + holdProgress * 0.18) * (1.0 - bloomProgress.value);
 
           // Track screen projection of core star for 3D overlay
           if (!isCinematicActive) {
@@ -1193,12 +1483,14 @@ export default function CelestialUniverse() {
             corePos.project(camera);
             const screenX = (corePos.x * 0.5 + 0.5) * 100;
             const screenY = (-corePos.y * 0.5 + 0.5) * 100;
-            const dist = camera.position.distanceTo(three.coreStarMesh.position);
+            const dist = camera.position.distanceTo(
+              three.coreStarMesh.position,
+            );
             setCoreScreen({
               x: screenX,
               y: screenY,
               dist,
-              isNear: dist <= 15.0
+              isNear: dist <= 15.0,
             });
           }
         } else {
@@ -1211,8 +1503,14 @@ export default function CelestialUniverse() {
       // Verificación en vivo de hover sobre estrella activa para cambiar el cursor a 'pointer'
       let hoveredActiveStar = false;
       const hoverRaycaster = new THREE.Raycaster();
-      hoverRaycaster.setFromCamera(new THREE.Vector2(scrollRef.current.mouseX, scrollRef.current.mouseY), camera);
-      const hoverIntersects = hoverRaycaster.intersectObjects(interactiveStarMeshes, true);
+      hoverRaycaster.setFromCamera(
+        new THREE.Vector2(scrollRef.current.mouseX, scrollRef.current.mouseY),
+        camera,
+      );
+      const hoverIntersects = hoverRaycaster.intersectObjects(
+        interactiveStarMeshes,
+        true,
+      );
 
       if (hoverIntersects.length > 0) {
         let hitObj = hoverIntersects[0].object;
@@ -1221,22 +1519,33 @@ export default function CelestialUniverse() {
           starMesh = hitObj.parent;
         }
         const currentActiveIndex = Object.keys(tappedStars).length;
-        if (starMesh.userData.index === currentActiveIndex && currentActiveIndex < REQUIRED_STARS_TO_AWAKEN && !tappedStars[starMesh.userData.id]) {
+        if (
+          starMesh.userData.index === currentActiveIndex &&
+          currentActiveIndex < REQUIRED_STARS_TO_AWAKEN &&
+          !tappedStars[starMesh.userData.id]
+        ) {
           hoveredActiveStar = true;
         }
       }
 
       // También verificar estrella central si el modo cinemático está activo
-      if (isCinematicActive && three.centralStarMesh && three.centralStarMesh.visible) {
-        const centralIntersects = hoverRaycaster.intersectObjects([three.centralStarMesh], true);
+      if (
+        isCinematicActive &&
+        three.centralStarMesh &&
+        three.centralStarMesh.visible
+      ) {
+        const centralIntersects = hoverRaycaster.intersectObjects(
+          [three.centralStarMesh],
+          true,
+        );
         if (centralIntersects.length > 0) {
           hoveredActiveStar = true;
         }
       }
 
-      const canvas = document.getElementById('webgl-universe-canvas');
+      const canvas = document.getElementById("webgl-universe-canvas");
       if (canvas) {
-        canvas.style.cursor = hoveredActiveStar ? 'pointer' : 'default';
+        canvas.style.cursor = hoveredActiveStar ? "pointer" : "default";
       }
 
       // Update lines representation buffer to map with moving stars
@@ -1244,7 +1553,12 @@ export default function CelestialUniverse() {
       interactiveStarMeshes.forEach((mesh, idx) => {
         // Only map if visible and not shooting
         if (mesh.visible && !mesh.userData.isShooting) {
-          linePosAttr.setXYZ(idx, mesh.position.x, mesh.position.y, mesh.position.z);
+          linePosAttr.setXYZ(
+            idx,
+            mesh.position.x,
+            mesh.position.y,
+            mesh.position.z,
+          );
         } else {
           // Send connections out of view to split broken line segments elegantly
           linePosAttr.setXYZ(idx, 9999, 9999, 9999);
@@ -1253,7 +1567,8 @@ export default function CelestialUniverse() {
       linePosAttr.needsUpdate = true;
 
       // 6. Particle Splash Engine Update
-      const sparkPositions = sparkPoints.geometry.attributes.position.array as Float32Array;
+      const sparkPositions = sparkPoints.geometry.attributes.position
+        .array as Float32Array;
       let activeSparks = 0;
 
       for (let i = sparkParticles.length - 1; i >= 0; i--) {
@@ -1295,7 +1610,10 @@ export default function CelestialUniverse() {
       }
 
       // Slowly fade in flower particles as they get activated
-      (stardustFlower.material as THREE.PointsMaterial).opacity = Math.min(0.72, bloomVal * 1.15);
+      (stardustFlower.material as THREE.PointsMaterial).opacity = Math.min(
+        0.72,
+        bloomVal * 1.15,
+      );
 
       const flowerGeoPos = stardustFlower.geometry.attributes.position;
       const positions = flowerGeoPos.array as Float32Array;
@@ -1305,12 +1623,27 @@ export default function CelestialUniverse() {
         const target = stardustFlowerTargets[i];
 
         const delayFactor = (i / FLOWER_COUNT) * 0.28;
-        const particleProgress = Math.max(0, Math.min(1.0, (bloomVal - delayFactor) / (1.0 - delayFactor)));
+        const particleProgress = Math.max(
+          0,
+          Math.min(1.0, (bloomVal - delayFactor) / (1.0 - delayFactor)),
+        );
         const easedProgress = Math.pow(particleProgress, 3);
 
-        let x = THREE.MathUtils.lerp(source.x, target.x * bloomScale.value, easedProgress);
-        let y = THREE.MathUtils.lerp(source.y, target.y * bloomScale.value, easedProgress);
-        let z = THREE.MathUtils.lerp(source.z, target.z * bloomScale.value, easedProgress);
+        let x = THREE.MathUtils.lerp(
+          source.x,
+          target.x * bloomScale.value,
+          easedProgress,
+        );
+        let y = THREE.MathUtils.lerp(
+          source.y,
+          target.y * bloomScale.value,
+          easedProgress,
+        );
+        let z = THREE.MathUtils.lerp(
+          source.z,
+          target.z * bloomScale.value,
+          easedProgress,
+        );
 
         // Swirling vortex physics when morphing is in progress
         if (particleProgress > 0 && particleProgress < 1.0) {
@@ -1334,7 +1667,8 @@ export default function CelestialUniverse() {
               ? petalParticleIndex
               : petalParticleIndex - FLOWER_INNER_RING_COUNT;
             const petalIdx = localIndex % FLOWER_PETAL_COUNT;
-            const petalFreq = time * (isInnerRing ? 1.8 : 1.35) + petalIdx * 1.25;
+            const petalFreq =
+              time * (isInnerRing ? 1.8 : 1.35) + petalIdx * 1.25;
             const drift = Math.sin(petalFreq) * (isInnerRing ? 0.16 : 0.24);
             x += Math.cos(petalFreq) * drift;
             y += Math.sin(petalFreq) * drift * 0.6;
@@ -1351,12 +1685,19 @@ export default function CelestialUniverse() {
       stardustFlower.rotation.z = time * 0.018 + bloomVal * 0.22;
 
       // Gently animate the central star if visible
-      if (threeRef.current.centralStarMesh && threeRef.current.centralStarMesh.visible) {
+      if (
+        threeRef.current.centralStarMesh &&
+        threeRef.current.centralStarMesh.visible
+      ) {
         threeRef.current.centralStarMesh.rotation.y = time * 0.25;
         if (threeRef.current.centralGlowMesh) {
           threeRef.current.centralGlowMesh.rotation.z = -time * 0.15;
           const centralPulse = 1.0 + Math.sin(time * 3.5) * 0.25; // elegant rapid star twinkle pulse
-          threeRef.current.centralGlowMesh.scale.set(centralPulse, centralPulse, 1.0);
+          threeRef.current.centralGlowMesh.scale.set(
+            centralPulse,
+            centralPulse,
+            1.0,
+          );
         }
       }
 
@@ -1367,7 +1708,10 @@ export default function CelestialUniverse() {
         const colorG = THREE.MathUtils.lerp(0.0274, 0.12, colorVal);
         const colorB = THREE.MathUtils.lerp(0.0392, 0.32, colorVal);
         renderer.setClearColor(new THREE.Color(colorR, colorG, colorB), 1.0);
-        scene.fog = new THREE.FogExp2(new THREE.Color(colorR, colorG, colorB), 0.015);
+        scene.fog = new THREE.FogExp2(
+          new THREE.Color(colorR, colorG, colorB),
+          0.015,
+        );
       } else {
         renderer.setClearColor(0x05070a, 1.0);
         scene.fog = new THREE.FogExp2(0x05070a, 0.015);
@@ -1388,9 +1732,9 @@ export default function CelestialUniverse() {
     if (isHolding && !isCinematicActive) {
       // Increment hold interval
       holdIntervalRef.current = window.setInterval(() => {
-        setHoldProgress(p => {
+        setHoldProgress((p) => {
           const next = Math.min(1.0, p + 0.012);
-          
+
           // Emit lovely spiraling spark sprays from the core while holding!
           const three = threeRef.current;
           if (three) {
@@ -1399,11 +1743,15 @@ export default function CelestialUniverse() {
             const spd = 3.0 + Math.random() * 5.0;
             sparks.push({
               pos: new THREE.Vector3(0, 0, 0),
-              vel: new THREE.Vector3(Math.cos(angle) * spd, Math.sin(angle) * spd, (Math.random() - 0.5) * 2),
+              vel: new THREE.Vector3(
+                Math.cos(angle) * spd,
+                Math.sin(angle) * spd,
+                (Math.random() - 0.5) * 2,
+              ),
               size: 0.4 + Math.random() * 0.8,
               age: 0,
               maxAge: 70 + Math.random() * 40,
-              color: new THREE.Color('#ffe082')
+              color: new THREE.Color("#ffe082"),
             });
           }
 
@@ -1427,10 +1775,11 @@ export default function CelestialUniverse() {
       if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
       if (!isCinematicActive && !isBloomTriggered.current) {
         holdIntervalRef.current = window.setInterval(() => {
-          setHoldProgress(p => {
+          setHoldProgress((p) => {
             const next = Math.max(0, p - 0.02);
             if (next === 0) {
-              if (holdIntervalRef.current) clearInterval(holdIntervalRef.current);
+              if (holdIntervalRef.current)
+                clearInterval(holdIntervalRef.current);
             }
             return next;
           });
@@ -1446,7 +1795,7 @@ export default function CelestialUniverse() {
   // Automated magical 20-second cinematic finale
   const triggerCinematicFinale = () => {
     setIsCinematicActive(true);
-    
+
     const three = threeRef.current;
     if (!three) return;
 
@@ -1465,76 +1814,101 @@ export default function CelestialUniverse() {
       y: 0,
       z: 22,
       duration: 5.5,
-      ease: 'power3.inOut'
+      ease: "power3.inOut",
     });
 
     // 2. Morph stardust fully into the flower
-    tl.to(bloomProgress, {
-      value: 1.0,
-      duration: 6.5,
-      ease: 'power2.out'
-    }, 0);
+    tl.to(
+      bloomProgress,
+      {
+        value: 1.0,
+        duration: 6.5,
+        ease: "power2.out",
+      },
+      0,
+    );
 
     // 3. Flower blooms spectacularly! Scale up and disperse petals as galaxies
-    tl.to(bloomScale, {
-      value: 1.45,
-      duration: 7.5,
-      ease: 'power2.inOut',
-      onStart: () => {
-        const sparks = threeRef.current?.sparkParticles;
-        const baseVec = new THREE.Vector3(0, 0, 0);
-        if (sparks) {
-          for (let i = 0; i < 200; i++) {
-            const angle = (i / 200) * Math.PI * 2;
-            const spd = 7.0 + Math.random() * 10.0;
-            const vel = new THREE.Vector3(
-              Math.cos(angle) * spd,
-              Math.sin(angle) * spd,
-              (Math.random() - 0.5) * 6.0
-            );
-            sparks.push({
-              pos: baseVec.clone(),
-              vel,
-              size: 0.5 + Math.random() * 1.1,
-              age: 0,
-              maxAge: 130 + Math.random() * 160,
-              color: new THREE.Color('#ffe082')
-            });
+    tl.to(
+      bloomScale,
+      {
+        value: 1.45,
+        duration: 7.5,
+        ease: "power2.inOut",
+        onStart: () => {
+          const sparks = threeRef.current?.sparkParticles;
+          const baseVec = new THREE.Vector3(0, 0, 0);
+          if (sparks) {
+            for (let i = 0; i < 200; i++) {
+              const angle = (i / 200) * Math.PI * 2;
+              const spd = 7.0 + Math.random() * 10.0;
+              const vel = new THREE.Vector3(
+                Math.cos(angle) * spd,
+                Math.sin(angle) * spd,
+                (Math.random() - 0.5) * 6.0,
+              );
+              sparks.push({
+                pos: baseVec.clone(),
+                vel,
+                size: 0.5 + Math.random() * 1.1,
+                age: 0,
+                maxAge: 130 + Math.random() * 160,
+                color: new THREE.Color("#ffe082"),
+              });
+            }
           }
-        }
-      }
-    }, 4.5);
+        },
+      },
+      4.5,
+    );
 
     // 4. Sky transforms into glowing pastel dawn
-    tl.to(bloomBrighten, {
-      value: 1.0,
-      duration: 9.0,
-      ease: 'power1.inOut'
-    }, 5.0);
+    tl.to(
+      bloomBrighten,
+      {
+        value: 1.0,
+        duration: 9.0,
+        ease: "power1.inOut",
+      },
+      5.0,
+    );
 
     // 5. Spin majestic flower
-    tl.to(three.stardustFlower.rotation, {
-      z: '+=3.2',
-      duration: 13.0,
-      ease: 'power2.inOut'
-    }, 3.0);
+    tl.to(
+      three.stardustFlower.rotation,
+      {
+        z: "+=3.2",
+        duration: 13.0,
+        ease: "power2.inOut",
+      },
+      3.0,
+    );
 
     // 6. Soft dissolve of core flower structure, merging into galaxies
-    tl.to(three.stardustFlower.material, {
-      opacity: 0.22,
-      duration: 7.0,
-      ease: 'power1.inOut'
-    }, 11.0);
+    tl.to(
+      three.stardustFlower.material,
+      {
+        opacity: 0.22,
+        duration: 7.0,
+        ease: "power1.inOut",
+      },
+      11.0,
+    );
 
     // 7. Letter-by-letter drawing of the magical sentence - starts earlier
-    tl.call(() => {
-      setIsSentenceVisible(true);
-      typeOutSentence();
-    }, undefined, 6.5);
+    tl.call(
+      () => {
+        setIsSentenceVisible(true);
+        typeOutSentence();
+      },
+      undefined,
+      6.5,
+    );
   };
 
   const typeOutSentence = () => {
-    const fullSentence = "El universo se volvió un poco más hermoso el día en que naciste, Rocío.";
+    const fullSentence =
+      "El universo se volvió un poco más hermoso el día en que naciste <3";
     let currentText = "";
     let i = 0;
 
@@ -1549,26 +1923,30 @@ export default function CelestialUniverse() {
           const pos = new THREE.Vector3(
             (Math.random() - 0.5) * 16,
             -3 + (Math.random() - 0.5) * 3,
-            6 + (Math.random() - 0.5) * 4
+            6 + (Math.random() - 0.5) * 4,
           );
           sparks.push({
             pos,
-            vel: new THREE.Vector3((Math.random() - 0.5) * 1.5, Math.random() * 2.2, (Math.random() - 0.5) * 1.5),
+            vel: new THREE.Vector3(
+              (Math.random() - 0.5) * 1.5,
+              Math.random() * 2.2,
+              (Math.random() - 0.5) * 1.5,
+            ),
             size: 0.5 + Math.random() * 0.7,
             age: 0,
             maxAge: 90,
-            color: new THREE.Color('#ffecb3')
+            color: new THREE.Color("#ffecb3"),
           });
         }
 
-        if (fullSentence[i] !== ' ' && i % 4 === 0) {
+        if (fullSentence[i] !== " " && i % 4 === 0) {
           playCelestialChime(Math.floor(i / 4) % 10);
         }
 
         i++;
       } else {
         clearInterval(interval);
-        
+
         // Reveal the Central Star of Rocío and its brilliant cyan glow plane ONLY after text finishes typing!
         const three = threeRef.current;
         if (three && three.centralStarMesh && three.centralGlowMesh) {
@@ -1576,12 +1954,12 @@ export default function CelestialUniverse() {
           gsap.to(three.centralStarMesh.material, {
             opacity: 1.0,
             duration: 3.5,
-            ease: 'power2.out'
+            ease: "power2.out",
           });
           gsap.to(three.centralGlowMesh.material, {
             opacity: 0.95,
             duration: 3.5,
-            ease: 'power2.out'
+            ease: "power2.out",
           });
         }
 
@@ -1622,7 +2000,7 @@ export default function CelestialUniverse() {
 
       {/* Floating Poetic Sentences Overlay from Tapped Stars */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-20 overflow-hidden">
-        {floatingTexts.map(item => (
+        {floatingTexts.map((item) => (
           <div
             key={item.id}
             style={{
@@ -1630,7 +2008,7 @@ export default function CelestialUniverse() {
               top: `${item.y}%`,
               opacity: item.opacity,
               transform: `translate(-50%, -50%) scale(${item.scale})`,
-              textShadow: '0 10px 24px rgba(0, 0, 0, 0.28)'
+              textShadow: "0 10px 24px rgba(0, 0, 0, 0.28)",
             }}
             className="absolute max-w-[min(320px,82vw)] rounded-[1.4rem] border border-amber-100/25 bg-[#1f1408]/72 px-4 py-2.5 text-center font-marcellus text-base sm:text-lg text-[#fff7e1] leading-relaxed tracking-[0.06em] whitespace-normal backdrop-blur-md shadow-[0_16px_40px_rgba(0,0,0,0.28)] transition-transform duration-75 select-none"
           >
@@ -1644,7 +2022,9 @@ export default function CelestialUniverse() {
         <div className="absolute bottom-24 left-1/2 -translate-x-1/2 pointer-events-none z-30 select-none text-center px-4 w-full max-w-xs sm:max-w-md transition-all duration-300">
           <div className="inline-block bg-black/60 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full shadow-lg">
             <span className="font-sans text-xs text-white/90 tracking-wide font-medium animate-fadeIn">
-              {isTooFar ? "Desliza para acercarte a la estrella brillante" : "¡Estrella al alcance! Tócala para despertar el recuerdo"}
+              {isTooFar
+                ? "Desliza para acercarte a la estrella"
+                : "¡Hay una estrella cerca! Tocála y mira que pasa"}
             </span>
           </div>
         </div>
@@ -1659,17 +2039,22 @@ export default function CelestialUniverse() {
 
       {/* Game/Interaction Guides and Status Indicators */}
       {!isCinematicActive && !showCentralGuide && !isCentralStarClicked && (
-      <div className="absolute top-8 right-8 flex flex-col items-end pointer-events-none z-30 select-none">
-        <div className="flex items-center space-x-2.5 bg-black/30 backdrop-blur-md border border-white/5 px-4 py-2 rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
-          <div className="relative w-2.5 h-2.5 flex items-center justify-center">
-            <span className={`absolute block w-2.5 h-2.5 rounded-full ${isReadyToAwaken ? 'bg-amber-300 animate-ping' : 'bg-cyan-400'}`} />
-            <span className={`relative block w-2 h-2 rounded-full ${isReadyToAwaken ? 'bg-amber-300' : 'bg-cyan-400'}`} />
+        <div className="absolute top-8 right-8 flex flex-col items-end pointer-events-none z-30 select-none">
+          <div className="flex items-center space-x-2.5 bg-black/30 backdrop-blur-md border border-white/5 px-4 py-2 rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
+            <div className="relative w-2.5 h-2.5 flex items-center justify-center">
+              <span
+                className={`absolute block w-2.5 h-2.5 rounded-full ${isReadyToAwaken ? "bg-amber-300 animate-ping" : "bg-cyan-400"}`}
+              />
+              <span
+                className={`relative block w-2 h-2 rounded-full ${isReadyToAwaken ? "bg-amber-300" : "bg-cyan-400"}`}
+              />
+            </div>
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/80">
+              {tappedCount} / {REQUIRED_STARS_TO_AWAKEN} Fragmentos de memoria
+              recuperados
+            </span>
           </div>
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/80">
-            {tappedCount} / {REQUIRED_STARS_TO_AWAKEN} Fragmentos de memoria recuperados
-          </span>
         </div>
-      </div>
       )}
 
       {/* Ambient Depth Indicator */}
@@ -1693,16 +2078,15 @@ export default function CelestialUniverse() {
         <div
           id="celestial-hold-trigger-container"
           style={{
-            position: 'absolute',
+            position: "absolute",
             left: `${coreScreen.x}%`,
             top: `${coreScreen.y}%`,
-            transform: 'translate(-50%, -50%)',
+            transform: "translate(-50%, -50%)",
           }}
           className="pointer-events-auto z-30 select-none flex flex-col items-center justify-center"
         >
           {/* Pulsing trigger core wrapper */}
           <div className="relative flex flex-col items-center space-y-4 text-center">
-            
             {/* Guide Ring indicating connection if too far */}
             {!coreScreen.isNear && (
               <div className="absolute w-28 h-28 sm:w-32 sm:h-32 border border-dashed border-amber-300/30 rounded-full animate-spin-slow pointer-events-none" />
@@ -1737,13 +2121,15 @@ export default function CelestialUniverse() {
               {/* Inner physical nucleus */}
               <div
                 style={{
-                  transform: `scale(${coreScreen.isNear ? (1.0 + holdProgress * 1.5) : 0.8})`,
+                  transform: `scale(${coreScreen.isNear ? 1.0 + holdProgress * 1.5 : 0.8})`,
                   backgroundColor: coreScreen.isNear
                     ? `rgba(254, 243, 199, ${0.68 + holdProgress * 0.18})`
-                    : 'rgba(254, 243, 199, 0.3)'
+                    : "rgba(254, 243, 199, 0.3)",
                 }}
                 className={`w-5 h-5 rounded-full transition-all duration-100 flex items-center justify-center ${
-                  coreScreen.isNear ? "bg-amber-100 shadow-[0_0_12px_rgba(254,243,199,0.55)]" : "bg-amber-300/40"
+                  coreScreen.isNear
+                    ? "bg-amber-100 shadow-[0_0_12px_rgba(254,243,199,0.55)]"
+                    : "bg-amber-300/40"
                 }`}
               />
 
@@ -1778,10 +2164,12 @@ export default function CelestialUniverse() {
               {coreScreen.isNear ? (
                 <>
                   <span className="font-sans text-[10px] sm:text-[11px] uppercase tracking-[0.25em] text-amber-200 font-semibold animate-pulse">
-                    {isHolding ? "Despertando el Cosmos..." : "Mantén Pulsado el Núcleo"}
+                    {isHolding
+                      ? "Reflejando tu brillo..."
+                      : " Una idea de lo hermosa, irreal y brillante que eres..."}
                   </span>
                   <span className="font-caveat text-xs sm:text-sm text-amber-100/70 leading-tight">
-                    Haz florecer la constelación
+                    Mantén presionado para descubrirlo
                   </span>
                 </>
               ) : (
@@ -1809,7 +2197,7 @@ export default function CelestialUniverse() {
           {/* Polaroid container */}
           <div
             className="bg-[#fcfbf9] text-stone-800 p-4 pb-8 rounded shadow-[0_24px_50px_rgba(0,0,0,0.7)] max-w-xs sm:max-w-sm w-full flex flex-col space-y-4 animate-scaleUp cursor-default transform rotate-1 select-none"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Aspect image placeholder */}
             <div className="relative aspect-square w-full bg-stone-900 overflow-hidden border border-stone-200 shadow-inner">
@@ -1836,7 +2224,7 @@ export default function CelestialUniverse() {
               onClick={() => setUnlockedMemory(null)}
               className="mt-2 font-sans text-[10px] uppercase tracking-[0.25em] text-stone-400 hover:text-stone-700 active:scale-95 transition-all duration-200 border border-stone-200 py-1.5 rounded-sm hover:bg-stone-50 cursor-pointer text-center"
             >
-              Continuar Viaje
+              Continuar
             </button>
           </div>
         </div>
@@ -1852,7 +2240,8 @@ export default function CelestialUniverse() {
             <h1
               style={{
                 fontFamily: "'Cinzel', 'Georgia', serif",
-                textShadow: '0 0 20px rgba(255, 236, 179, 0.45), 0 0 40px rgba(255, 213, 79, 0.15)'
+                textShadow:
+                  "0 0 20px rgba(255, 236, 179, 0.45), 0 0 40px rgba(255, 213, 79, 0.15)",
               }}
               className="text-2xl sm:text-3xl md:text-4xl text-amber-50 font-light italic leading-relaxed tracking-wider break-words selection:bg-transparent drop-shadow-lg shadow-white/20"
             >
@@ -1889,28 +2278,25 @@ export default function CelestialUniverse() {
                   left: `${Math.random() * 100}%`,
                   animationDelay: `${Math.random() * 8}s`,
                   animationDuration: `${5 + Math.random() * 8}s`,
-                  transform: `scale(${0.3 + Math.random() * 0.7})`
+                  transform: `scale(${0.3 + Math.random() * 0.7})`,
                 }}
                 className="absolute w-2 h-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#22d3ee] animate-floatDown"
               />
             ))}
           </div>
 
-          <div
-            className="relative max-w-lg w-full overflow-hidden rounded-[2rem] border border-white/12 bg-[linear-gradient(145deg,rgba(9,18,32,0.96),rgba(25,12,28,0.94))] p-2 shadow-[0_22px_80px_rgba(0,0,0,0.45)] select-none animate-scaleUp"
-          >
+          <div className="relative max-w-lg w-full overflow-hidden rounded-[2rem] border border-white/12 bg-[linear-gradient(145deg,rgba(9,18,32,0.96),rgba(25,12,28,0.94))] p-2 shadow-[0_22px_80px_rgba(0,0,0,0.45)] select-none animate-scaleUp">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,220,140,0.16),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(56,189,248,0.14),transparent_34%)]" />
             <div className="relative rounded-[1.6rem] border border-white/8 bg-black/18 px-6 py-7 sm:px-8 sm:py-8 backdrop-blur-xl">
               <div className="mb-6 flex items-start justify-between gap-4">
                 <div className="text-left">
-                  <span className="inline-flex rounded-full border border-amber-200/20 bg-amber-100/8 px-3 py-1 font-cinzel text-[10px] uppercase tracking-[0.34em] text-amber-100/75">
-                    Noche especial
-                  </span>
-                  <h1 className="mt-4 font-cinzel text-2xl sm:text-3xl tracking-[0.28em] text-[#f8f4e8]">
-                    ROCÍO
-                  </h1>
+                  <h1 className="mt-4 font-cinzel text-2xl sm:text-3xl tracking-[0.28em] text-[#f8f4e8]"></h1>
                   <p className="mt-3 max-w-[16rem] font-marcellus text-sm sm:text-[15px] leading-7 text-white/72">
-                    Una lucecita chapina en medio del cielo entero.
+                    Para: Rocío, el lucero que siempre he admirado
+                  </p>
+                  <p className="mt-3 max-w-[16rem] font-marcellus text-sm sm:text-[15px] leading-7 text-white/72">
+                    Espero te haya gustado. Con todo el cariño que te tengo -
+                    Arnold
                   </p>
                 </div>
 
@@ -1930,12 +2316,13 @@ export default function CelestialUniverse() {
 
               <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] px-5 py-5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <p className="font-caveat text-[1.65rem] sm:text-[1.95rem] leading-tight text-[#f8f0d8]">
-                  "En un universo lleno de estrellas, tú eres la más hermosa de todas."
+                  "En un universo lleno de estrellas, tú eres la más hermosa de
+                  todas."
                 </p>
                 <div className="mt-4 flex items-center gap-3">
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-200/30 to-transparent" />
                   <span className="font-cinzel text-[11px] uppercase tracking-[0.28em] text-amber-200/80">
-                    Feliz cumpleaños
+                    Feliz cumpleañoooos Rociyioo
                   </span>
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-200/30 to-transparent" />
                 </div>
