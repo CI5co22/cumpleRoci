@@ -89,7 +89,7 @@ const STAR_MEMORIES = [
   },
   {
     title: "Imparable",
-    text: "Hace falta un diluvio para apagar ese brillo que transmites (ni el diluvio sería suficinte)",
+    text: "Hace falta un diluvio para apagar ese brillo que transmites (ni el diluvio sería suficiente)",
     imageName: "img3",
   },
   {
